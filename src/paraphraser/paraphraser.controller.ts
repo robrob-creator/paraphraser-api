@@ -64,22 +64,8 @@ export class ParaphraserController {
     },
   })
   async healthCheck() {
-    // Check AI availability without blocking the health check
-    let aiAvailable = false;
-    try {
-      aiAvailable = await Promise.race([
-        this.aiService.isAvailable(),
-        new Promise<boolean>((resolve) =>
-          setTimeout(() => resolve(false), 1000),
-        ),
-      ]);
-    } catch (error) {
-      this.logger?.warn(
-        'AI service check failed during health check',
-        error.message,
-      );
-      aiAvailable = false;
-    }
+    // Get comprehensive health status including Python script availability
+    const healthStatus = await this.paraphraserService.getHealthStatus();
 
     return {
       status: 'ok',
@@ -88,14 +74,39 @@ export class ParaphraserController {
       version: '1.0.0',
       environment: process.env.NODE_ENV || 'development',
       deployment: {
-        platform: process.env.RAILWAY_PUBLIC_DOMAIN ? 'railway' : 'local',
-        domain: process.env.RAILWAY_PUBLIC_DOMAIN || 'localhost',
+        platform: process.env.RENDER
+          ? 'render'
+          : process.env.RAILWAY_PUBLIC_DOMAIN
+            ? 'railway'
+            : 'local',
+        domain: process.env.RENDER
+          ? `${process.env.RENDER_SERVICE_NAME}.onrender.com`
+          : process.env.RAILWAY_PUBLIC_DOMAIN || 'localhost',
       },
-      features: {
-        aiParaphrasing: aiAvailable,
-        useAI: process.env.USE_AI_PARAPHRASE === 'true',
-        useAdvanced: process.env.USE_ADVANCED_PARAPHRASE === 'true',
+      services: {
+        pythonAI: {
+          available: healthStatus.pythonAI,
+          description: 'T5 Python model for AI paraphrasing',
+        },
+        cloudAI: {
+          available: healthStatus.cloudAI,
+          description: 'Hugging Face cloud API for AI paraphrasing',
+        },
+        advanced: {
+          available: healthStatus.advanced,
+          description: 'Advanced algorithmic paraphrasing',
+        },
+        simple: {
+          available: healthStatus.simple,
+          description: 'Basic rule-based paraphrasing',
+        },
       },
+      fallbackChain: [
+        'Python AI (T5 model)',
+        'Cloud AI (Hugging Face)',
+        'Advanced algorithmic',
+        'Simple rule-based',
+      ],
       uptime: process.uptime(),
     };
   }
