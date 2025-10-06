@@ -1,32 +1,36 @@
-# Railway Deployment Guide
+# Railway Deployment Guide - Python AI Support
 
-## 🚀 Quick Deploy to Railway
+## 🚀 Deploy with Python T5 Model Support
 
-### Option 1: Deploy Button (Recommended)
+### Prerequisites
+- GitHub repository connected to Railway
+- No additional environment variables needed
 
-1. Click the deploy button below:
-   [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/new)
+### Deployment Configuration
 
-2. Connect your GitHub repository
-3. Set environment variables (see below)
-4. Deploy!
+This project uses **Docker** deployment on Railway (not Nixpacks) to ensure proper Python + Node.js support:
 
-### Option 2: Railway CLI
+- **`Dockerfile`**: Custom container with Node.js 18 + Python 3
+- **`railway.toml`**: Railway configuration for Docker builds
+- **`requirements.txt`**: Python dependencies (transformers, torch, etc.)
 
+### Quick Deploy Steps
+
+1. **Connect Repository**: Link your GitHub repo to Railway
+2. **Automatic Detection**: Railway will detect `railway.toml` and use Docker builder
+3. **Python Installation**: Docker will install Python dependencies during build
+4. **Deploy**: No additional configuration needed!
+
+### Build Process
+
+Railway will execute these steps automatically:
 ```bash
-# Install Railway CLI
-npm install -g @railway/cli
-
-# Login to Railway
-railway login
-
-# Initialize project
-railway project create paraphraser-api
-
-# Set environment variables
-railway variables set NODE_ENV=production
-railway variables set USE_AI_PARAPHRASE=false
-railway variables set USE_ADVANCED_PARAPHRASE=true
+# 1. Use Node.js + Python Docker image
+# 2. Install Python dependencies: pip3 install -r requirements.txt  
+# 3. Install Node.js dependencies: npm ci
+# 4. Build application: npm run build
+# 5. Start: npm run start:prod
+```
 
 # Deploy
 railway up

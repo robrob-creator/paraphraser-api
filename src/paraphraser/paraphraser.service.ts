@@ -101,17 +101,10 @@ export class ParaphraserService {
         this.logger.debug(`Python AI error stack: ${error.stack}`);
       }
 
-      // Fallback to Cloud AI (Hugging Face)
-      try {
-        this.logger.log('Attempting Cloud AI paraphrasing...');
-        const result = await this.cloudAIStrategy.paraphrase(text, style);
-        if (result.confidence > 0.5) {
-          this.logger.log('Cloud AI paraphrasing successful');
-          return result;
-        }
-      } catch (error) {
-        this.logger.warn(`Cloud AI failed: ${error.message}`);
-      }
+      // Skip Cloud AI - go directly to Advanced for faster fallback
+      this.logger.log(
+        'Skipping Cloud AI - proceeding to Advanced paraphrasing',
+      );
     }
 
     // Fallback to Advanced strategy

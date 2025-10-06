@@ -3,23 +3,35 @@ services:
     name: paraphraser-api
     env: node
     plan: starter
-services:
-  - type: web
-    name: paraphraser-api
-    env: node
-    plan: starter
     buildCommand: |
       # Debug Python environment
+      echo "=== Python Environment Debug ==="
       which python3
       python3 --version
+      which pip3
+      pip3 --version || echo "pip3 not found"
       which pip
-      pip --version
-      # Try different pip install methods
-      pip install -r requirements.txt || python3 -m pip install --user -r requirements.txt || python3 -m pip install -r requirements.txt
-      # Verify installation
-      python3 -c "import transformers; print('Transformers installed successfully')"
+      pip --version || echo "pip not found"
+      
+      # Try to install Python dependencies with different methods
+      echo "=== Installing Python Dependencies ==="
+      pip3 install -r requirements.txt || \
+      python3 -m pip install -r requirements.txt || \
+      pip install -r requirements.txt || \
+      python3 -m pip install --user -r requirements.txt || \
+      echo "All pip methods failed"
+      
+      # Verify Python package installation
+      echo "=== Verifying Python Installation ==="
+      python3 -c "import sys; print('Python path:', sys.path)"
+      python3 -c "import transformers; print('✅ Transformers installed successfully')" || echo "❌ Transformers installation failed"
+      python3 -c "import torch; print('✅ PyTorch installed successfully')" || echo "❌ PyTorch installation failed"
+      python3 -c "import sentencepiece; print('✅ SentencePiece installed successfully')" || echo "❌ SentencePiece installation failed"
+      
       # Install Node.js dependencies and build
+      echo "=== Installing Node.js Dependencies ==="
       npm ci && npm run build
+      
     startCommand: npm run start:prod
     healthCheckPath: /paraphrase/health
     envVars:
@@ -27,8 +39,6 @@ services:
         value: production
       - key: PORT
         value: 10000
-      - key: HUGGINGFACE_API_KEY
-        sync: false
       - key: THROTTLE_TTL
         value: 60
       - key: THROTTLE_LIMIT

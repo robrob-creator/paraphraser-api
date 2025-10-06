@@ -1,5 +1,5 @@
 [build]
-builder = "NIXPACKS"
+builder = "DOCKERFILE"
 
 [deploy]
 startCommand = "npm run start:prod"
@@ -11,9 +11,3 @@ restartPolicyMaxRetries = 10
 [environments.production.variables]
 NODE_ENV = "production"
 PORT = "3000"
-USE_AI_PARAPHRASE = "true"
-USE_ADVANCED_PARAPHRASE = "true"
-RATE_LIMIT_TTL = "60"
-RATE_LIMIT_MAX = "100"
-BULK_RATE_LIMIT_TTL = "60"
-BULK_RATE_LIMIT_MAX = "10"

@@ -53,6 +53,7 @@ curl http://localhost:3000/paraphrase/health
 ### Common Render Deployment Issues
 
 #### 1. "ModuleNotFoundError: No module named 'transformers'"
+
 ```bash
 # Check build logs for pip installation
 # Try redeploying if pip install failed
@@ -60,6 +61,7 @@ curl http://localhost:3000/paraphrase/health
 ```
 
 #### 2. "Hugging Face API key not configured"
+
 ```bash
 # Go to Render Dashboard → Environment Variables
 # Add: HUGGINGFACE_API_KEY = your_token_here
@@ -67,6 +69,7 @@ curl http://localhost:3000/paraphrase/health
 ```
 
 #### 3. "Python AI confidence too low: 0.1"
+
 ```bash
 # This means Python script failed but didn't crash
 # Check if Python dependencies are properly installed
@@ -74,6 +77,7 @@ curl http://localhost:3000/paraphrase/health
 ```
 
 ### Expected Log Sequence for Working Deployment:
+
 ```
 ✅ [ParaphraserService] Executing fallback for style: creative
 ✅ [ParaphraserService] Use AI: true

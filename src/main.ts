@@ -90,13 +90,9 @@ Currently supports English (en) with plans for additional languages.`,
     console.log(`📖 API Documentation: ${baseUrl}/api-docs`);
     console.log(`🔍 Health Check: ${baseUrl}/paraphrase/health`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(
-      `🤖 Smart Fallback System: Python AI → Cloud AI → Advanced → Simple`,
-    );
-    console.log(`🐍 Python AI: Available for creative, formal, casual styles`);
-    console.log(
-      `☁️ Cloud AI: Hugging Face API fallback ${process.env.HUGGINGFACE_API_KEY ? 'configured' : 'not configured'}`,
-    );
+    console.log(`🤖 Fallback System: Python AI → Advanced → Simple`);
+    console.log(`🐍 Python AI: T5 model for creative, formal, casual styles`);
+    console.log(`🔧 Advanced: Algorithmic paraphrasing fallback`);
   } catch (error) {
     console.error('❌ Failed to start server:', error);
     process.exit(1);

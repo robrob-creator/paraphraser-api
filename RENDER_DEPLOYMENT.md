@@ -10,24 +10,13 @@ This guide covers deploying the Paraphraser API to Render with full Python + Nod
 
 ## Deployment Steps
 
-### 1. Create Hugging Face API Token
-
-1. Go to [Hugging Face Settings](https://huggingface.co/settings/tokens)
-2. Create a new token with "Read" access
-3. Copy the token for step 3
-
-### 2. Deploy to Render
+### 1. Deploy to Render
 
 1. Connect your GitHub repository to Render
 2. Render will automatically detect the `render.yaml` configuration
-3. **IMPORTANT**: In the Render dashboard, add the following environment variable:
-   - **HUGGINGFACE_API_KEY**: Your Hugging Face token from step 1
-   
-   ⚠️ **Without this API key, the Cloud AI fallback won't work and you'll only get basic paraphrasing if Python AI fails!**
+3. No additional environment variables needed - the system uses Python AI with Advanced fallback
 
-### 3. Configuration Details
-
-The deployment includes:
+### 2. Configuration DetailsThe deployment includes:
 
 - **Runtime**: Node.js with Python 3 support
 - **Build**: Python dependencies installation + Node.js build
@@ -40,20 +29,17 @@ The deployment includes:
 - **Python Dependencies**: transformers, torch, sentencepiece, protobuf
 - **Scaling**: Single instance (starter plan)
 
-### 4. Environment Variables
+### 3. Environment Variables
 
-Required environment variables:
-
-- `HUGGINGFACE_API_KEY`: Your Hugging Face API token
+Automatically configured environment variables:
 - `NODE_ENV`: production (auto-set)
 - `PORT`: 10000 (auto-set by Render)
 
 Optional environment variables:
-
 - `THROTTLE_TTL`: 60 (rate limit window in seconds)
 - `THROTTLE_LIMIT`: 10 (requests per window)
 
-### 5. API Endpoints
+### 4. API Endpoints
 
 Once deployed, your API will be available at `https://your-app-name.onrender.com`
 
