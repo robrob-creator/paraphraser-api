@@ -11,9 +11,13 @@ RUN apk add --no-cache \
 # Set working directory
 WORKDIR /app
 
-# Copy Python requirements and install Python dependencies
+# Create and activate Python virtual environment
+RUN python3 -m venv /app/venv
+ENV PATH="/app/venv/bin:$PATH"
+
+# Copy Python requirements and install Python dependencies in venv
 COPY requirements.txt .
-RUN pip3 install -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Copy package files and install Node.js dependencies
 COPY package*.json ./
