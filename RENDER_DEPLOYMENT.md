@@ -32,10 +32,12 @@ This guide covers deploying the Paraphraser API to Render with full Python + Nod
 ### 3. Environment Variables
 
 Automatically configured environment variables:
+
 - `NODE_ENV`: production (auto-set)
 - `PORT`: 10000 (auto-set by Render)
 
 Optional environment variables:
+
 - `THROTTLE_TTL`: 60 (rate limit window in seconds)
 - `THROTTLE_LIMIT`: 10 (requests per window)
 

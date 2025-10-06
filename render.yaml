@@ -12,7 +12,7 @@ services:
       pip3 --version || echo "pip3 not found"
       which pip
       pip --version || echo "pip not found"
-      
+
       # Try to install Python dependencies with different methods
       echo "=== Installing Python Dependencies ==="
       pip3 install -r requirements.txt || \
@@ -20,18 +20,18 @@ services:
       pip install -r requirements.txt || \
       python3 -m pip install --user -r requirements.txt || \
       echo "All pip methods failed"
-      
+
       # Verify Python package installation
       echo "=== Verifying Python Installation ==="
       python3 -c "import sys; print('Python path:', sys.path)"
       python3 -c "import transformers; print('✅ Transformers installed successfully')" || echo "❌ Transformers installation failed"
       python3 -c "import torch; print('✅ PyTorch installed successfully')" || echo "❌ PyTorch installation failed"
       python3 -c "import sentencepiece; print('✅ SentencePiece installed successfully')" || echo "❌ SentencePiece installation failed"
-      
+
       # Install Node.js dependencies and build
       echo "=== Installing Node.js Dependencies ==="
       npm ci && npm run build
-      
+
     startCommand: npm run start:prod
     healthCheckPath: /paraphrase/health
     envVars:

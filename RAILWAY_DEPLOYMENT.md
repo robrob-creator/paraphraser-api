@@ -3,6 +3,7 @@
 ## 🚀 Deploy with Python T5 Model Support
 
 ### Prerequisites
+
 - GitHub repository connected to Railway
 - No additional environment variables needed
 
@@ -24,17 +25,20 @@ This project uses **Docker** deployment on Railway (not Nixpacks) to ensure prop
 ### Build Process
 
 Railway will execute these steps automatically:
+
 ```bash
 # 1. Use Node.js + Python Docker image
-# 2. Install Python dependencies: pip3 install -r requirements.txt  
+# 2. Install Python dependencies: pip3 install -r requirements.txt
 # 3. Install Node.js dependencies: npm ci
 # 4. Build application: npm run build
 # 5. Start: npm run start:prod
 ```
 
 # Deploy
+
 railway up
-```
+
+````
 
 ### Option 3: GitHub Integration
 
@@ -53,7 +57,7 @@ railway up
 NODE_ENV=production
 USE_AI_PARAPHRASE=false
 USE_ADVANCED_PARAPHRASE=true
-```
+````
 
 ### Optional Variables
 
