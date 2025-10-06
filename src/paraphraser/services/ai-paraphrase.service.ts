@@ -40,12 +40,15 @@ export class AIParaphraseService {
     style: string,
   ): Promise<string[]> {
     return new Promise((resolve, reject) => {
-      const python = spawn('python3', [
-        this.pythonScriptPath,
-        text,
-        style,
-        '3',
-      ]);
+      let python;
+
+      try {
+        python = spawn('python3', [this.pythonScriptPath, text, style, '3']);
+      } catch (error) {
+        reject(new Error(`Failed to spawn python3: ${error.message}`));
+        return;
+      }
+
       let output = '';
       let errorOutput = '';
 
@@ -55,6 +58,11 @@ export class AIParaphraseService {
 
       python.stderr.on('data', (data) => {
         errorOutput += data.toString();
+      });
+
+      python.on('error', (error) => {
+        this.logger.error(`Python process error: ${error.message}`);
+        reject(new Error(`Python execution failed: ${error.message}`));
       });
 
       python.on('close', (code) => {
@@ -82,8 +90,30 @@ export class AIParaphraseService {
 
   async isAvailable(): Promise<boolean> {
     try {
-      await this.callPythonScript('test', 'simple');
-      return true;
+      // Quick check if python3 is available without executing the script
+      const python = spawn('which', ['python3']);
+
+      return new Promise((resolve) => {
+        let found = false;
+
+        python.stdout.on('data', () => {
+          found = true;
+        });
+
+        python.on('close', (code) => {
+          resolve(found && code === 0);
+        });
+
+        python.on('error', () => {
+          resolve(false);
+        });
+
+        // Timeout after 500ms
+        setTimeout(() => {
+          python.kill();
+          resolve(false);
+        }, 500);
+      });
     } catch {
       return false;
     }
