@@ -20,12 +20,15 @@ This guide covers deploying the Paraphraser API to Render with full Python + Nod
 
 1. Connect your GitHub repository to Render
 2. Render will automatically detect the `render.yaml` configuration
-3. In the Render dashboard, add the following environment variable:
+3. **IMPORTANT**: In the Render dashboard, add the following environment variable:
    - **HUGGINGFACE_API_KEY**: Your Hugging Face token from step 1
+   
+   ⚠️ **Without this API key, the Cloud AI fallback won't work and you'll only get basic paraphrasing if Python AI fails!**
 
 ### 3. Configuration Details
 
 The deployment includes:
+
 - **Runtime**: Node.js with Python 3 support
 - **Build**: Python dependencies installation + Node.js build
   ```bash
@@ -40,6 +43,7 @@ The deployment includes:
 ### 4. Environment Variables
 
 Required environment variables:
+
 - `HUGGINGFACE_API_KEY`: Your Hugging Face API token
 - `NODE_ENV`: production (auto-set)
 - `PORT`: 10000 (auto-set by Render)
@@ -106,6 +110,7 @@ curl -X POST https://your-app-name.onrender.com/paraphrase \
 ### 8. Python Dependencies
 
 The app automatically installs these Python packages during build:
+
 - `transformers==4.44.2` - Hugging Face transformers library
 - `torch==2.4.1` - PyTorch for model inference
 - `sentencepiece==0.2.0` - Tokenization for T5 model
@@ -114,6 +119,7 @@ The app automatically installs these Python packages during build:
 ### 9. Scaling
 
 For higher traffic:
+
 1. Upgrade to a higher Render plan (more memory for T5 model)
 2. Adjust `THROTTLE_LIMIT` and `THROTTLE_TTL` as needed
 3. Consider enabling auto-scaling in render.yaml

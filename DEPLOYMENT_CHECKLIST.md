@@ -3,6 +3,7 @@
 ## Pre-Deployment Verification
 
 ### ✅ Local Testing
+
 ```bash
 # 1. Test Python script directly
 npm run python:test
@@ -36,10 +37,11 @@ curl http://localhost:3000/paraphrase/health
    - Confirm health check passes
 
 4. **Test Deployment**
+
    ```bash
    # Health check
    curl https://your-app.onrender.com/paraphrase/health
-   
+
    # Test Python AI
    curl -X POST https://your-app.onrender.com/paraphrase \
      -H "Content-Type: application/json" \
@@ -48,17 +50,51 @@ curl http://localhost:3000/paraphrase/health
 
 ## 🔧 Troubleshooting
 
+### Common Render Deployment Issues
+
+#### 1. "ModuleNotFoundError: No module named 'transformers'"
+```bash
+# Check build logs for pip installation
+# Try redeploying if pip install failed
+# Verify requirements.txt is in root directory
+```
+
+#### 2. "Hugging Face API key not configured"
+```bash
+# Go to Render Dashboard → Environment Variables
+# Add: HUGGINGFACE_API_KEY = your_token_here
+# Get token from: https://huggingface.co/settings/tokens
+```
+
+#### 3. "Python AI confidence too low: 0.1"
+```bash
+# This means Python script failed but didn't crash
+# Check if Python dependencies are properly installed
+# Verify T5 model can be downloaded (~892MB)
+```
+
+### Expected Log Sequence for Working Deployment:
+```
+✅ [ParaphraserService] Executing fallback for style: creative
+✅ [ParaphraserService] Use AI: true
+✅ [ParaphraserService] Attempting Python AI paraphrasing...
+✅ [ParaphraserService] Python AI paraphrasing successful
+```
+
 ### Python Issues
+
 - Check build logs for `pip install` errors
 - Verify Python 3 is available on Render
 - Monitor memory usage (T5 model needs ~1GB)
 
 ### Fallback Testing
+
 - `creative`, `formal`, `casual` → Should use Python AI
 - `simple`, `academic` → Should use Advanced/Simple
 - If Python fails → Should fallback to Cloud AI → Advanced → Simple
 
 ### Performance
+
 - First request may be slow (model loading)
 - Subsequent requests should be faster
 - Monitor response times and error rates

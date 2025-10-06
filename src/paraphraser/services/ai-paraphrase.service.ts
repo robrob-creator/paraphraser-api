@@ -19,13 +19,13 @@ export class AIParaphraseService {
       // In production, use system python3 (dependencies installed with --user)
       return 'python3';
     }
-    
+
     // In development, try virtual environment first, fallback to system python
     const venvPython = path.join(process.cwd(), '.venv', 'bin', 'python');
     if (fs.existsSync(venvPython)) {
       return venvPython;
     }
-    
+
     return 'python3';
   }
 

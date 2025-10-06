@@ -3,9 +3,21 @@ services:
     name: paraphraser-api
     env: node
     plan: starter
+services:
+  - type: web
+    name: paraphraser-api
+    env: node
+    plan: starter
     buildCommand: |
-      # Install Python dependencies
-      python3 -m pip install --user -r requirements.txt
+      # Debug Python environment
+      which python3
+      python3 --version
+      which pip
+      pip --version
+      # Try different pip install methods
+      pip install -r requirements.txt || python3 -m pip install --user -r requirements.txt || python3 -m pip install -r requirements.txt
+      # Verify installation
+      python3 -c "import transformers; print('Transformers installed successfully')"
       # Install Node.js dependencies and build
       npm ci && npm run build
     startCommand: npm run start:prod
@@ -21,8 +33,6 @@ services:
         value: 60
       - key: THROTTLE_LIMIT
         value: 10
-      - key: PYTHONPATH
-        value: /opt/render/project/src
     autoDeploy: true
     region: oregon
     scaling:
