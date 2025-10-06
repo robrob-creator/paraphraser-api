@@ -144,145 +144,548 @@ class ParaphraseModel:
             return self._fallback_paraphrase(text, style, num_alternatives)
     
     def _fallback_paraphrase(self, text, style, num_alternatives):
-        """More sophisticated paraphrasing using multiple transformation techniques"""
-        
-        # Enhanced synonym replacements
-        replacements = {
-            'quick': ['fast', 'rapid', 'swift'],
-            'brown': ['reddish-brown', 'russet', 'bronze'],
-            'jumps': ['leaps', 'bounds', 'springs'],
-            'over': ['above', 'across', 'beyond'],
-            'lazy': ['idle', 'sluggish', 'sleepy'],
-            'dog': ['canine', 'hound', 'pup'],
-            'fox': ['red fox', 'wild fox', 'cunning fox'],
-            'nice': ['pleasant', 'lovely', 'wonderful'],
-            'good': ['excellent', 'great', 'fine'],
-            'today': ['this day', 'currently', 'right now'],
-            'weather': ['climate', 'conditions'],
-            'meeting': ['gathering', 'conference'],
-            'project': ['task', 'assignment'],
-            'amazing': ['incredible', 'fantastic', 'remarkable'],
-            'beautiful': ['gorgeous', 'stunning', 'lovely'],
-            'important': ['crucial', 'vital', 'significant'],
-            'people': ['individuals', 'folks', 'everyone'],
-            'gonna': ['going to', 'intend to', 'plan to'],
-            'test': ['examine', 'evaluate', 'assess'],
-            'feature': ['functionality', 'capability', 'component'],
-            'daily': ['everyday', 'routine', 'regular'],
-            'task': ['responsibility', 'duty', 'assignment'],
-            'tired': ['exhausted', 'weary', 'fatigued'],
-            'hungry': ['starving', 'famished', 'peckish'],
-            'working': ['laboring', 'toiling', 'employed'],
-            'day': ['period', 'time', 'hours'],
-            'food': ['nourishment', 'sustenance', 'provisions'],
-            'fridge': ['refrigerator', 'icebox', 'cooler'],
-            'cat': ['feline', 'kitty', 'pet'],
-            'chicken': ['poultry', 'fowl', 'bird'],
-            'leftover': ['remaining', 'surplus', 'extra'],
-            'lot': ['great deal', 'abundance', 'many things'],
-            'burden': ['load', 'responsibility', 'weight'],
-            'clueless': ['confused', 'uncertain', 'lost'],
-            'completely': ['entirely', 'totally', 'utterly'],
-            'find': ['discover', 'locate', 'identify'],
-            'way': ['method', 'approach', 'solution'],
-            'seem': ['appear', 'look like', 'give the impression'],
-            'make': ['create', 'accomplish', 'achieve'],
-        }
+        """Universal sentence-level paraphrasing for any sentence structure"""
         
         results = []
         
-        # Method 1: Synonym replacement
+        # Method 1: Universal syntactic transformations
+        syntactic_variants = self._apply_syntactic_transformations(text, style)
+        results.extend(syntactic_variants)
+        
+        # Method 2: Universal semantic substitutions
+        semantic_variants = self._apply_semantic_substitutions(text, style)
+        results.extend(semantic_variants)
+        
+        # Method 3: Universal discourse restructuring
+        discourse_variants = self._apply_discourse_restructuring(text, style)
+        results.extend(discourse_variants)
+        
+        # Remove duplicates and original text
+        unique_results = []
+        for result in results:
+            if result and result.strip() != text.strip() and result not in unique_results:
+                unique_results.append(result)
+        
+        # If we have few results, add guaranteed transformations
+        if len(unique_results) < num_alternatives:
+            guaranteed_results = self._ensure_minimum_transformations(text, style, num_alternatives - len(unique_results))
+            for result in guaranteed_results:
+                if result and result not in unique_results and result != text:
+                    unique_results.append(result)
+        
+        return unique_results[:num_alternatives] if unique_results else [text]
+    
+    def _ensure_minimum_transformations(self, text, style, needed):
+        """Ensure we have minimum transformations for any sentence"""
+        results = []
+        
+        # Strategy 1: Add qualifying words
+        if style == "formal" and not any(word in text.lower() for word in ["perhaps", "possibly", "likely", "generally"]):
+            qualified = "Perhaps " + text.lower()
+            results.append(qualified)
+            
+        if len(results) < needed:
+            qualified2 = "Generally speaking, " + text.lower()
+            results.append(qualified2)
+        
+        # Strategy 2: Change sentence structure with "it is" constructions
+        if len(results) < needed and text.endswith('.'):
+            if style == "formal":
+                if text.lower().startswith("the "):
+                    # "The X is Y" → "It is noteworthy that the X is Y"
+                    formal_variant = f"It is noteworthy that {text.lower()}"
+                    results.append(formal_variant)
+                else:
+                    # Any sentence → "It is important to note that [sentence]"
+                    formal_variant = f"It is important to note that {text.lower()}"
+                    results.append(formal_variant)
+        
+        # Strategy 3: Add emphasis or hedging
+        if len(results) < needed:
+            if style == "casual":
+                casual_variant = "Actually, " + text.lower()
+                results.append(casual_variant)
+            else:
+                formal_variant = "It should be noted that " + text.lower()
+                results.append(formal_variant)
+        
+        # Strategy 4: Rephrase with different verb tenses or aspects
+        if len(results) < needed:
+            tense_variant = self._try_tense_transformation(text)
+            if tense_variant and tense_variant != text:
+                results.append(tense_variant)
+        
+        return results[:needed]
+    
+    def _try_tense_transformation(self, text):
+        """Try to transform tenses or aspects"""
+        # Simple present to present continuous
+        if " is " in text and not " is being " in text:
+            continuous = text.replace(" is ", " is currently ")
+            return continuous
+        
+        # Add temporal qualifiers
+        if not any(word in text.lower() for word in ["currently", "presently", "now", "today"]):
+            return "Currently, " + text.lower()
+            
+        return None
+    
+    def _apply_syntactic_transformations(self, text, style):
+        """Apply universal syntactic transformations that work on any sentence"""
+        results = []
+        
+        # Transform 1: Change temporal expressions
+        temporal_transforms = self._transform_temporal_expressions(text)
+        results.extend(temporal_transforms)
+        
+        # Transform 2: Sentence combining/splitting
+        if ". " in text:
+            # Split compound sentences
+            sentences = text.split(". ")
+            if len(sentences) > 1:
+                # Try combining with different conjunctions
+                combined = self._recombine_sentences(sentences)
+                if combined and combined != text:
+                    results.append(combined)
+        elif " and " in text or " but " in text or " or " in text:
+            # Split coordinated clauses
+            split_form = self._split_coordinated_clauses(text)
+            if split_form and split_form != text:
+                results.append(split_form)
+        
+        # Transform 3: Clause ordering (move dependent clauses)
+        reordered = self._reorder_clauses(text)
+        if reordered and reordered != text:
+            results.append(reordered)
+        
+        # Transform 4: Add sentence starters/connectors
+        connector_variants = self._add_sentence_connectors(text, style)
+        results.extend(connector_variants)
+        
+        # Transform 5: Change sentence types (declarative to interrogative, etc.)
+        type_variants = self._change_sentence_types(text)
+        results.extend(type_variants)
+        
+        # Transform 6: Expand/contract phrases
+        expanded_variants = self._expand_contract_phrases(text, style)
+        results.extend(expanded_variants)
+            
+        return results
+    
+    def _apply_semantic_substitutions(self, text, style):
+        """Apply universal semantic word and phrase substitutions"""
+        results = []
+        
+        # Universal high-frequency word substitutions
+        universal_replacements = {
+            # Verbs
+            'have': ['possess', 'own', 'hold', 'maintain'],
+            'get': ['obtain', 'acquire', 'receive', 'gain'],
+            'make': ['create', 'produce', 'generate', 'cause'],
+            'do': ['perform', 'execute', 'carry out', 'accomplish'],
+            'go': ['proceed', 'advance', 'move', 'travel'],
+            'come': ['arrive', 'approach', 'emerge', 'appear'],
+            'see': ['observe', 'notice', 'perceive', 'witness'],
+            'know': ['understand', 'comprehend', 'realize', 'recognize'],
+            'think': ['believe', 'consider', 'suppose', 'assume'],
+            'say': ['state', 'declare', 'express', 'mention'],
+            'give': ['provide', 'offer', 'supply', 'deliver'],
+            'take': ['accept', 'receive', 'acquire', 'obtain'],
+            'use': ['employ', 'utilize', 'apply', 'implement'],
+            'find': ['discover', 'locate', 'identify', 'uncover'],
+            'feel': ['experience', 'sense', 'perceive', 'encounter'],
+            'look': ['appear', 'seem', 'examine', 'observe'],
+            'want': ['desire', 'wish', 'prefer', 'seek'],
+            'need': ['require', 'demand', 'necessitate', 'call for'],
+            'try': ['attempt', 'endeavor', 'strive', 'effort to'],
+            'work': ['function', 'operate', 'labor', 'perform'],
+            
+            # Adjectives
+            'good': ['excellent', 'outstanding', 'superior', 'fine'],
+            'bad': ['poor', 'terrible', 'awful', 'inferior'],
+            'big': ['large', 'enormous', 'huge', 'massive'],
+            'small': ['tiny', 'little', 'minimal', 'compact'],
+            'new': ['recent', 'fresh', 'modern', 'current'],
+            'old': ['ancient', 'elderly', 'aged', 'former'],
+            'important': ['crucial', 'vital', 'significant', 'essential'],
+            'different': ['distinct', 'unique', 'varied', 'alternative'],
+            'easy': ['simple', 'straightforward', 'effortless', 'basic'],
+            'hard': ['difficult', 'challenging', 'tough', 'complex'],
+            'right': ['correct', 'accurate', 'proper', 'appropriate'],
+            'wrong': ['incorrect', 'mistaken', 'erroneous', 'false'],
+            'sure': ['certain', 'confident', 'positive', 'convinced'],
+            'clear': ['obvious', 'evident', 'apparent', 'transparent'],
+            
+            # Nouns
+            'thing': ['item', 'object', 'matter', 'element'],
+            'person': ['individual', 'human', 'character', 'being'],
+            'time': ['period', 'moment', 'duration', 'interval'],
+            'place': ['location', 'position', 'spot', 'area'],
+            'way': ['method', 'approach', 'manner', 'technique'],
+            'problem': ['issue', 'difficulty', 'challenge', 'concern'],
+            'idea': ['concept', 'notion', 'thought', 'proposal'],
+            'part': ['portion', 'section', 'component', 'segment'],
+            'group': ['team', 'collection', 'assembly', 'gathering'],
+            'fact': ['reality', 'truth', 'information', 'detail'],
+            
+            # Adverbs
+            'very': ['extremely', 'highly', 'exceptionally', 'remarkably'],
+            'really': ['truly', 'genuinely', 'actually', 'indeed'],
+            'quite': ['rather', 'fairly', 'somewhat', 'considerably'],
+            'always': ['constantly', 'continuously', 'perpetually', 'invariably'],
+            'never': ['not ever', 'at no time', 'under no circumstances'],
+            'often': ['frequently', 'regularly', 'commonly', 'repeatedly'],
+            'sometimes': ['occasionally', 'periodically', 'intermittently', 'at times'],
+            'quickly': ['rapidly', 'swiftly', 'speedily', 'promptly'],
+            'slowly': ['gradually', 'leisurely', 'steadily', 'carefully'],
+        }
+        
+        # Apply substitutions with multiple variants
         words = text.split()
-        for i in range(num_alternatives):
+        max_variants = 3
+        for variant_index in range(max_variants):
             new_words = []
-            for j, word in enumerate(words):
-                clean_word = word.lower().strip('.,!?;:')
+            for word in words:
+                clean_word = word.lower().strip('.,!?;:"()[]{}')
                 punctuation = word[len(clean_word):]
                 
-                if clean_word in replacements and len(replacements[clean_word]) > i:
-                    replacement = replacements[clean_word][i % len(replacements[clean_word])]
-                    new_words.append(replacement + punctuation)
+                if clean_word in universal_replacements:
+                    replacements = universal_replacements[clean_word]
+                    if len(replacements) > variant_index:
+                        replacement = replacements[variant_index]
+                        new_words.append(replacement + punctuation)
+                    else:
+                        new_words.append(word)
                 else:
                     new_words.append(word)
             
             result = ' '.join(new_words)
             
-            # Apply style modifications
-            if style == "formal":
-                result = result.replace("can't", "cannot").replace("won't", "will not")
-                result = result.replace("gonna", "going to").replace("wanna", "want to")
-                result = result.replace("I gonna", "I am going to").replace("I'm gonna", "I am going to")
-                result = result.replace("dont", "do not").replace("don't", "do not")
-                result = result.replace("cant", "cannot").replace("Im ", "I am ").replace("Ive ", "I have ")
-                result = result.replace("Theres ", "There is ").replace("theres ", "there is ")
-                result = result.replace("isnt", "is not").replace("isn't", "is not")
-                result = result.replace("arent", "are not").replace("aren't", "are not")
-                # Fix common grammatical issues
-                result = result.replace("I going to", "I am going to")
-            elif style == "casual":
-                result = result.replace("cannot", "can't").replace("will not", "won't")
-                result = result.replace("going to", "gonna").replace("want to", "wanna")
+            # Apply style-specific grammar fixes
+            result = self._apply_style_grammar(result, style)
             
-            # Always fix basic grammar issues regardless of style
-            result = result.replace("I going to", "I am going to")
-            result = result.replace("I gonna", "I am going to")
-            
-            # Capitalize first letter
-            if result:
-                result = result[0].upper() + result[1:]
-            
-            if result != text and result not in results:
+            if result != text:
                 results.append(result)
+                
+        return results
+    
+    def _apply_discourse_restructuring(self, text, style):
+        """Apply universal discourse-level restructuring"""
+        results = []
         
-        # Method 2: Sentence restructuring for longer texts
-        if len(words) > 10 and len(results) < num_alternatives:
-            # Try to rephrase by changing sentence structure
-            if style == "formal":
-                # Convert "I'm tired and hungry" to "I am experiencing fatigue and hunger"
-                restructured = text
-                restructured = restructured.replace("I'm tired and hungry", "I am experiencing fatigue and hunger")
-                restructured = restructured.replace("I've been working", "I have been employed")
-                restructured = restructured.replace("There's no food", "No sustenance remains")
-                restructured = restructured.replace("the cat ate", "my feline consumed")
-                restructured = restructured.replace("I have a lot to burden", "I am facing numerous responsibilities")
-                restructured = restructured.replace("I'm completely clueless", "I am entirely uncertain")
-                restructured = restructured.replace("I cant seem to", "I am unable to")
-                if restructured != text and restructured not in results:
-                    results.append(restructured)
+        # Strategy 1: Change sentence perspective
+        perspective_variants = self._change_perspective(text)
+        results.extend(perspective_variants)
         
-        # Ensure we have at least one result
-        if not results:
-            # If no synonym replacements were made, try pattern-based transformations
-            if style == "formal":
-                # Common informal to formal transformations
-                formal_text = text
-                formal_text = formal_text.replace("I gonna", "I am going to")
-                formal_text = formal_text.replace("gonna", "going to")
-                formal_text = formal_text.replace("wanna", "want to")
-                formal_text = formal_text.replace("can't", "cannot")
-                formal_text = formal_text.replace("won't", "will not")
-                formal_text = formal_text.replace("don't", "do not")
-                formal_text = formal_text.replace("isn't", "is not")
-                formal_text = formal_text.replace("aren't", "are not")
-                formal_text = formal_text.replace("wasn't", "was not")
-                formal_text = formal_text.replace("weren't", "were not")
-                formal_text = formal_text.replace("haven't", "have not")
-                formal_text = formal_text.replace("hasn't", "has not")
-                formal_text = formal_text.replace("hadn't", "had not")
-                formal_text = formal_text.replace("wouldn't", "would not")
-                formal_text = formal_text.replace("couldn't", "could not")
-                formal_text = formal_text.replace("shouldn't", "should not")
-                formal_text = formal_text.replace("Im ", "I am ").replace("Ive ", "I have ").replace("Theres ", "There is ")
-                formal_text = formal_text.replace("cant", "cannot").replace("dont", "do not")
-                formal_text = formal_text.replace("isnt", "is not").replace("arent", "are not")
-                if formal_text != text:
-                    results = [formal_text]
-                else:
-                    results = [text]
-            else:
-                results = [text]
+        # Strategy 2: Add/remove intensifiers and qualifiers
+        intensity_variants = self._modify_intensity(text, style)
+        results.extend(intensity_variants)
+        
+        # Strategy 3: Change temporal/causal relationships
+        relationship_variants = self._modify_relationships(text)
+        results.extend(relationship_variants)
+        
+        return results
+    
+    def _transform_temporal_expressions(self, text):
+        """Transform temporal expressions and time-related structures"""
+        results = []
+        
+        # Transform "When I was X, I Y" to "During my X period, I Y" or "In my X days, I Y"
+        if text.lower().startswith("when i was "):
+            rest = text[11:]  # Remove "When I was "
+            if ", i " in rest.lower():
+                parts = rest.split(", I ", 1)
+                if len(parts) == 2:
+                    time_part = parts[0]
+                    action_part = parts[1]
+                    
+                    # Multiple temporal transformations
+                    results.append(f"During my {time_part} period, I {action_part}")
+                    results.append(f"In my {time_part} days, I {action_part}")
+                    results.append(f"Back when I was {time_part}, I {action_part}")
+        
+        # Transform "used to" constructions
+        if "used to " in text.lower():
+            text_lower = text.lower()
+            index = text_lower.find("used to ")
+            if index >= 0:
+                before = text[:index]
+                after = text[index + 8:]  # Remove "used to "
+                
+                # Transform to different habitual expressions
+                results.append(f"{before}would regularly {after}")
+                results.append(f"{before}frequently {after.replace('play', 'played').replace('go', 'went')}")
+                results.append(f"{before}had a habit of {after.replace(' ', 'ing ', 1)}")
+        
+        # Transform "every day" and frequency expressions
+        frequency_replacements = {
+            "every day": ["daily", "on a daily basis", "each day"],
+            "every week": ["weekly", "on a weekly basis", "each week"],
+            "always": ["consistently", "without fail", "invariably"],
+            "never": ["not once", "at no point", "under no circumstances"],
+            "often": ["frequently", "on many occasions", "regularly"],
+            "sometimes": ["occasionally", "from time to time", "periodically"]
+        }
+        
+        for freq, replacements in frequency_replacements.items():
+            if freq in text.lower():
+                for replacement in replacements:
+                    new_text = text.replace(freq, replacement)
+                    if new_text != text:
+                        results.append(new_text)
+        
+        return results
+    
+    def _apply_nominalization(self, text):
+        """Convert verbs to noun phrases (nominalization)"""
+        # Transform "I decided to go" to "My decision was to go"
+        # Transform "They discussed the plan" to "Their discussion of the plan"
+        
+        verb_to_noun = {
+            "decided": "decision was",
+            "discussed": "discussion concerned",
+            "analyzed": "analysis involved",
+            "studied": "study focused on",
+            "examined": "examination revealed",
+            "considered": "consideration of",
+            "evaluated": "evaluation showed",
+            "investigated": "investigation into"
+        }
+        
+        for verb, noun_phrase in verb_to_noun.items():
+            if verb in text.lower():
+                # Simple pattern replacement
+                if f"i {verb}" in text.lower():
+                    new_text = text.lower().replace(f"i {verb}", f"my {noun_phrase}")
+                    return new_text.capitalize()
+                elif f"they {verb}" in text.lower():
+                    new_text = text.lower().replace(f"they {verb}", f"their {noun_phrase}")
+                    return new_text.capitalize()
+        
+        return None
+    
+    def _change_voice_or_focus(self, text):
+        """Change voice, focus, or perspective of the sentence"""
+        results = []
+        
+        # Transform subject-verb patterns
+        if text.lower().startswith("i "):
+            # Change from first person to third person
+            words = text.split()
+            if len(words) > 1:
+                verb = words[1].lower()
+                if verb in ["like", "love", "enjoy", "prefer", "want", "need"]:
+                    # "I like X" → "X appeals to me" / "X is something I like"
+                    object_part = " ".join(words[2:])
+                    if object_part:
+                        return f"{object_part.capitalize()} appeals to me"
+                elif verb in ["play", "work", "study", "live"]:
+                    # "I play tennis" → "Tennis is my activity" / "My activity involves tennis"
+                    object_part = " ".join(words[2:])
+                    if object_part:
+                        return f"My activity involves {object_part}"
+        
+        # Transform possessive constructions
+        if " my " in text.lower():
+            # "I finished my work" → "My work is now complete"
+            if "finished my" in text.lower():
+                words = text.split()
+                for i, word in enumerate(words):
+                    if word.lower() == "finished" and i + 2 < len(words) and words[i+1].lower() == "my":
+                        object_part = " ".join(words[i+2:])
+                        return f"My {object_part} is now complete"
+        
+        return None
+    
+    def _recombine_sentences(self, sentences):
+        """Recombine sentences with different connectors"""
+        if len(sentences) < 2:
+            return None
             
-        return results[:num_alternatives]
+        connectors = ["Furthermore, ", "Additionally, ", "Moreover, ", "In addition, "]
+        connector = connectors[0]  # Use first connector
+        
+        combined = sentences[0].strip()
+        for sentence in sentences[1:]:
+            combined += f". {connector}{sentence.strip()}"
+            
+        return combined
+    
+    def _split_coordinated_clauses(self, text):
+        """Split coordinated clauses into separate sentences"""
+        coordinators = [" and ", " but ", " or "]
+        
+        for coord in coordinators:
+            if coord in text:
+                parts = text.split(coord, 1)
+                if len(parts) == 2:
+                    return f"{parts[0].strip()}. {parts[1].strip().capitalize()}"
+        
+        return None
+    
+    def _reorder_clauses(self, text):
+        """Reorder clauses when possible"""
+        # Move clauses starting with "because", "when", "if", etc.
+        subordinators = ["because ", "when ", "if ", "although ", "while ", "since "]
+        
+        for sub in subordinators:
+            if sub in text.lower():
+                # Try moving the subordinate clause to the beginning
+                lower_text = text.lower()
+                index = lower_text.find(sub)
+                if index > 0:  # Subordinate clause is not already at the beginning
+                    main_clause = text[:index].strip().rstrip(',')
+                    sub_clause = text[index:].strip()
+                    return f"{sub_clause.capitalize()}, {main_clause.lower()}"
+        
+        return None
+    
+    def _change_perspective(self, text):
+        """Change perspective or focus of the sentence"""
+        results = []
+        
+        # Transform personal statements to general ones
+        if text.lower().startswith("i "):
+            general_form = text.replace("I ", "One ", 1).replace("my ", "one's ", 1)
+            results.append(general_form)
+        
+        return results
+    
+    def _modify_intensity(self, text, style):
+        """Modify intensity through qualifiers and intensifiers"""
+        results = []
+        
+        if style == "formal":
+            # Add formal qualifiers
+            if not any(word in text.lower() for word in ["somewhat", "rather", "quite", "fairly"]):
+                # Add a qualifier to the first adjective/adverb
+                words = text.split()
+                for i, word in enumerate(words):
+                    if word.lower() in ["good", "bad", "difficult", "easy", "important", "clear"]:
+                        words[i] = f"somewhat {word}"
+                        results.append(" ".join(words))
+                        break
+        
+        return results
+    
+    def _modify_relationships(self, text):
+        """Modify temporal or causal relationships"""
+        results = []
+        
+        # Add causal relationships where appropriate
+        if ". " in text:
+            sentences = text.split(". ")
+            if len(sentences) == 2:
+                # Try adding causal connection
+                causal_form = f"{sentences[0].strip()}. Consequently, {sentences[1].strip().lower()}"
+                results.append(causal_form)
+        
+        return results
+    
+    def _apply_style_grammar(self, text, style):
+        """Apply style-specific grammar transformations"""
+        if style == "formal":
+            # Convert contractions
+            text = text.replace("can't", "cannot").replace("won't", "will not")
+            text = text.replace("don't", "do not").replace("isn't", "is not")
+            text = text.replace("aren't", "are not").replace("doesn't", "does not")
+            text = text.replace("I'm", "I am").replace("you're", "you are")
+            text = text.replace("it's", "it is").replace("that's", "that is")
+            
+        elif style == "casual":
+            # Convert formal to casual
+            text = text.replace("cannot", "can't").replace("will not", "won't")
+            text = text.replace("do not", "don't").replace("is not", "isn't")
+            
+        return text
+        
+    def _add_sentence_connectors(self, text, style):
+        """Add connectors and transitions to make variants"""
+        results = []
+        
+        # Don't add connectors to questions or imperatives
+        if text.endswith('?') or text.endswith('!'):
+            return results
+        
+        if style == "formal":
+            connectors = [
+                "Furthermore, ",
+                "Additionally, ",
+                "It is worth noting that ",
+                "It should be emphasized that ",
+                "Notably, "
+            ]
+        else:
+            connectors = [
+                "Also, ",
+                "Plus, ",
+                "By the way, ",
+                "Actually, ",
+                "Basically, "
+            ]
+        
+        for connector in connectors[:2]:  # Use first 2 to avoid too many variants
+            results.append(connector + text.lower())
+        
+        return results
+    
+    def _change_sentence_types(self, text):
+        """Transform between different sentence types where possible"""
+        results = []
+        
+        # Transform statements into emphatic forms
+        if not text.endswith('?') and not text.endswith('!'):
+            # Add emphasis
+            if text.endswith('.'):
+                emphatic = text[:-1] + "!"
+                results.append(emphatic)
+        
+        # Transform questions into statements (when possible)
+        if text.startswith("Where ") and text.endswith("?"):
+            # "Where did you go?" → "I would like to know where you went."
+            statement = "I would like to know " + text[:-1].lower() + "."
+            results.append(statement)
+        
+        return results
+    
+    def _expand_contract_phrases(self, text, style):
+        """Expand contractions or contract phrases"""
+        results = []
+        
+        if style == "formal":
+            # Expand contractions and add formal language
+            expanded = text
+            
+            # Contract to expand mappings
+            contractions = {
+                "can't": "cannot",
+                "won't": "will not", 
+                "don't": "do not",
+                "doesn't": "does not",
+                "isn't": "is not",
+                "aren't": "are not",
+                "I'm": "I am",
+                "you're": "you are",
+                "it's": "it is",
+                "that's": "that is",
+                "we're": "we are",
+                "they're": "they are"
+            }
+            
+            for contraction, expansion in contractions.items():
+                if contraction in expanded:
+                    expanded = expanded.replace(contraction, expansion)
+            
+            if expanded != text:
+                results.append(expanded)
+                
+            # Add formal phrases
+            if text.startswith("I "):
+                formal_version = "It is my belief that " + text[2:].lower()
+                results.append(formal_version)
+        
+        return results
 
 def main():
     if len(sys.argv) < 2:
