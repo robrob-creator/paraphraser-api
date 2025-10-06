@@ -60,13 +60,13 @@ export class AIParaphraseService {
     return new Promise((resolve, reject) => {
       let python;
 
+      const args = [this.pythonScriptPath, text, style, '3'];
+      this.logger.log(
+        `Calling Python script with args: ${JSON.stringify(args)}`,
+      );
+
       try {
-        python = spawn(this.pythonExecutable, [
-          this.pythonScriptPath,
-          text,
-          style,
-          '3',
-        ]);
+        python = spawn(this.pythonExecutable, args);
       } catch (error) {
         reject(new Error(`Failed to spawn python: ${error.message}`));
         return;
@@ -114,7 +114,10 @@ export class AIParaphraseService {
   async isAvailable(): Promise<boolean> {
     try {
       // Check if transformers is available
-      const python = spawn(this.pythonExecutable, ['-c', 'import transformers; print("OK")']);
+      const python = spawn(this.pythonExecutable, [
+        '-c',
+        'import transformers; print("OK")',
+      ]);
 
       return new Promise((resolve) => {
         let success = false;
