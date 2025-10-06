@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { ParaphraserController } from './paraphraser.controller';
 import { ParaphraserService } from './paraphraser.service';
 import { SimpleParaphraseStrategy } from './strategies/simple-paraphrase.strategy';
@@ -9,7 +10,7 @@ import { AIParaphraseService } from './services/ai-paraphrase.service';
 import { CloudAIParaphraseService } from './services/cloud-ai-paraphrase.service';
 
 @Module({
-  imports: [],
+  imports: [ConfigModule],
   controllers: [ParaphraserController],
   providers: [
     ParaphraserService,
