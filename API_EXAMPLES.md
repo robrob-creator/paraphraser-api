@@ -1,20 +1,43 @@
 # Paraphraser API - Usage Examples
 
-## Base URL
+## Base URLs
 
+### Production (Railway)
+```
+https://web-production-61c7.up.railway.app
+```
+
+### Local Development
 ```
 http://localhost:3000
 ```
 
 ## Health Check
 
+### Production
+```bash
+curl -X GET https://web-production-61c7.up.railway.app/paraphrase/health
+```
+
+### Local
 ```bash
 curl -X GET http://localhost:3000/paraphrase/health
 ```
 
 ## Single Text Paraphrasing
 
-### Simple Style
+### Simple Style (Production)
+
+```bash
+curl -X POST https://web-production-61c7.up.railway.app/paraphrase \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "The quick brown fox jumps over the lazy dog.",
+    "style": "simple"
+  }'
+```
+
+### Simple Style (Local)
 
 ```bash
 curl -X POST http://localhost:3000/paraphrase \
@@ -25,10 +48,10 @@ curl -X POST http://localhost:3000/paraphrase \
   }'
 ```
 
-### Formal Style
+### Formal Style (Production)
 
 ```bash
-curl -X POST http://localhost:3000/paraphrase \
+curl -X POST https://web-production-61c7.up.railway.app/paraphrase \
   -H "Content-Type: application/json" \
   -d '{
     "text": "I think this is a good idea and we should proceed.",
@@ -71,7 +94,28 @@ curl -X POST http://localhost:3000/paraphrase \
 
 ## Bulk Text Paraphrasing
 
-### Mixed Styles
+### Mixed Styles (Production)
+
+```bash
+curl -X POST https://web-production-61c7.up.railway.app/paraphrase/bulk \
+  -H "Content-Type: application/json" \
+  -d '[
+    {
+      "text": "The weather is nice today.",
+      "style": "simple"
+    },
+    {
+      "text": "We need to schedule a meeting to discuss the project.",
+      "style": "formal"
+    },
+    {
+      "text": "That movie was absolutely amazing!",
+      "style": "casual"
+    }
+  ]'
+```
+
+### Mixed Styles (Local)
 
 ```bash
 curl -X POST http://localhost:3000/paraphrase/bulk \
@@ -200,4 +244,31 @@ curl -X POST http://localhost:3000/paraphrase/bulk \
 
 ## API Documentation
 
+### Production
+Visit https://web-production-61c7.up.railway.app/api-docs for interactive Swagger documentation.
+
+### Local
 Visit http://localhost:3000/api-docs for interactive Swagger documentation.
+
+## Live Production Testing
+
+You can test the live API directly:
+
+### Quick Test (Production)
+```bash
+curl -X POST https://web-production-61c7.up.railway.app/paraphrase \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Hello world! This is a test of the paraphraser API.", "style": "simple"}'
+```
+
+### Health Check (Production)
+```bash
+curl -X GET https://web-production-61c7.up.railway.app/paraphrase/health
+```
+
+### AI Paraphrasing Test (Production)
+```bash
+curl -X POST https://web-production-61c7.up.railway.app/paraphrase \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Artificial intelligence is transforming the way we work and live.", "style": "academic"}'
+```
