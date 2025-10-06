@@ -3,9 +3,13 @@ services:
     name: paraphraser-api
     env: node
     plan: starter
-    buildCommand: npm ci && npm run build
+    buildCommand: |
+      # Install Python dependencies
+      python3 -m pip install --user -r requirements.txt
+      # Install Node.js dependencies and build
+      npm ci && npm run build
     startCommand: npm run start:prod
-    healthCheckPath: /health
+    healthCheckPath: /paraphrase/health
     envVars:
       - key: NODE_ENV
         value: production
@@ -17,6 +21,8 @@ services:
         value: 60
       - key: THROTTLE_LIMIT
         value: 10
+      - key: PYTHONPATH
+        value: /opt/render/project/src
     autoDeploy: true
     region: oregon
     scaling:

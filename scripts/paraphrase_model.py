@@ -56,28 +56,31 @@ class ParaphraseModel:
     
     def prepare_input(self, text, style):
         if style == "formal":
-            return f"paraphrase formally: {text} </s>"
+            return f"rewrite this text in a formal way: {text}"
         elif style == "casual":
-            return f"paraphrase casually: {text} </s>"
+            return f"rewrite this text in a casual way: {text}"
         elif style == "academic":
-            return f"paraphrase academically: {text} </s>"
+            return f"rewrite this text in an academic way: {text}"
+        elif style == "creative":
+            return f"rewrite this text creatively: {text}"
         else:
-            return f"paraphrase: {text} </s>"
+            return f"paraphrase: {text}"
     
     def get_generation_params(self, style, num_alternatives):
         base_params = {
             "max_length": 150,
             "num_return_sequences": max(1, num_alternatives),
-            "no_repeat_ngram_size": 2,
+            "no_repeat_ngram_size": 3,
             "early_stopping": True,
             "do_sample": True,
         }
         
         if style == "creative":
             base_params.update({
-                "temperature": 1.2,
-                "top_p": 0.9,
-                "num_beams": 3,
+                "temperature": 1.5,
+                "top_p": 0.8,
+                "num_beams": 5,
+                "diversity_penalty": 0.5,
             })
         elif style == "formal" or style == "academic":
             base_params.update({
@@ -87,7 +90,7 @@ class ParaphraseModel:
             })
         else:
             base_params.update({
-                "temperature": 1.0,
+                "temperature": 1.2,
                 "top_p": 0.85,
                 "num_beams": 4,
             })

@@ -17,7 +17,10 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "python:install": "python3 -m pip install -r requirements.txt",
+    "python:test": "python3 scripts/paraphrase_model.py \"Hello world, this is a test.\" creative 3",
+    "setup": "npm ci && npm run python:install && npm run build"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

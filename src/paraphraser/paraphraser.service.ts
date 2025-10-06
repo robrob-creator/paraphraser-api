@@ -73,21 +73,32 @@ export class ParaphraserService {
     ];
     const useAI = aiStyles.includes(style);
 
+    this.logger.log(`Executing fallback for style: ${style}`);
+    this.logger.log(`AI styles: ${aiStyles.join(', ')}`);
+    this.logger.log(`Use AI: ${useAI}`);
+
     if (useAI) {
       // Try Python AI first (T5 model)
       try {
         this.logger.log('Attempting Python AI paraphrasing...');
+        this.logger.debug(`Python executable path: ${this.aiStrategy}`);
         const result = await this.aiStrategy.paraphrase(
           text,
           style,
           targetLanguage,
         );
+        this.logger.debug(`Python AI result: ${JSON.stringify(result)}`);
         if (result.confidence > 0.5) {
           this.logger.log('Python AI paraphrasing successful');
           return result;
+        } else {
+          this.logger.warn(
+            `Python AI confidence too low: ${result.confidence}`,
+          );
         }
       } catch (error) {
-        this.logger.warn(`Python AI failed: ${error.message}`);
+        this.logger.error(`Python AI failed: ${error.message}`);
+        this.logger.debug(`Python AI error stack: ${error.stack}`);
       }
 
       // Fallback to Cloud AI (Hugging Face)

@@ -26,17 +26,20 @@ This guide covers deploying the Paraphraser API to Render with full Python + Nod
 ### 3. Configuration Details
 
 The deployment includes:
-
-- **Runtime**: Node.js with Python support
-- **Build**: `npm ci && npm run build`
+- **Runtime**: Node.js with Python 3 support
+- **Build**: Python dependencies installation + Node.js build
+  ```bash
+  python3 -m pip install --user -r requirements.txt
+  npm ci && npm run build
+  ```
 - **Start**: `npm run start:prod`
-- **Health Check**: `/health` endpoint
+- **Health Check**: `/paraphrase/health` endpoint
+- **Python Dependencies**: transformers, torch, sentencepiece, protobuf
 - **Scaling**: Single instance (starter plan)
 
 ### 4. Environment Variables
 
 Required environment variables:
-
 - `HUGGINGFACE_API_KEY`: Your Hugging Face API token
 - `NODE_ENV`: production (auto-set)
 - `PORT`: 10000 (auto-set by Render)
@@ -79,28 +82,42 @@ Content-Type: application/json
 ### 6. Testing the Deployment
 
 ```bash
-# Health check
-curl https://your-app-name.onrender.com/health
+# Health check (shows all service status)
+curl https://your-app-name.onrender.com/paraphrase/health
 
-# Test paraphrasing
+# Test Python AI paraphrasing (creative, formal, casual styles)
 curl -X POST https://your-app-name.onrender.com/paraphrase \
   -H "Content-Type: application/json" \
-  -d '{"text": "Hello world", "style": "creative"}'
+  -d '{"text": "Hello world, this is a test sentence.", "style": "creative"}'
+
+# Test simple paraphrasing
+curl -X POST https://your-app-name.onrender.com/paraphrase \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Hello world", "style": "simple"}'
 ```
 
 ### 7. Monitoring
 
-- Check logs in the Render dashboard
-- Monitor the health endpoint
+- Check logs in the Render dashboard for Python/Node.js processes
+- Monitor the health endpoint at `/paraphrase/health`
+- Python AI logs show model loading and generation status
 - The API includes comprehensive error handling and fallbacks
 
-### 8. Scaling
+### 8. Python Dependencies
+
+The app automatically installs these Python packages during build:
+- `transformers==4.44.2` - Hugging Face transformers library
+- `torch==2.4.1` - PyTorch for model inference
+- `sentencepiece==0.2.0` - Tokenization for T5 model
+- `protobuf==5.28.2` - Protocol buffers for model serialization
+
+### 9. Scaling
 
 For higher traffic:
-
-1. Upgrade to a higher Render plan
+1. Upgrade to a higher Render plan (more memory for T5 model)
 2. Adjust `THROTTLE_LIMIT` and `THROTTLE_TTL` as needed
 3. Consider enabling auto-scaling in render.yaml
+4. Monitor Python model memory usage (~1GB for T5)
 
 ## Architecture Notes
 

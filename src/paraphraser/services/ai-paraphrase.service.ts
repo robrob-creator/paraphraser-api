@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { spawn } from 'child_process';
 import * as path from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class AIParaphraseService {
@@ -10,12 +11,23 @@ export class AIParaphraseService {
     'scripts',
     'paraphrase_model.py',
   );
-  private readonly pythonExecutable = path.join(
-    process.cwd(),
-    '.venv',
-    'bin',
-    'python',
-  );
+  private readonly pythonExecutable = this.getPythonExecutable();
+
+  private getPythonExecutable(): string {
+    // Check if we're in a production environment (Render, Railway, etc.)
+    if (process.env.NODE_ENV === 'production') {
+      // In production, use system python3 (dependencies installed with --user)
+      return 'python3';
+    }
+    
+    // In development, try virtual environment first, fallback to system python
+    const venvPython = path.join(process.cwd(), '.venv', 'bin', 'python');
+    if (fs.existsSync(venvPython)) {
+      return venvPython;
+    }
+    
+    return 'python3';
+  }
 
   async paraphrase(
     text: string,
