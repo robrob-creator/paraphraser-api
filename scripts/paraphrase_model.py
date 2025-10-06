@@ -12,11 +12,11 @@ class ParaphraseModel:
         try:
             from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
             import torch
-            self.model_name = "t5-small"  # Much lighter model
+            self.model_name = "t5-paraphrase-generation"  # Specialized paraphrasing model
             self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
             self.model = AutoModelForSeq2SeqLM.from_pretrained(self.model_name)
             self.use_transformers = True
-            logging.info("Loaded T5-small model successfully")
+            logging.info("Loaded t5-paraphrase-generation model successfully")
         except Exception as e:
             logging.error(f"Failed to load transformers model: {e}")
             self.use_transformers = False
@@ -31,37 +31,52 @@ class ParaphraseModel:
         try:
             import torch
             
-            # Simple T5 input format
+            # t5-paraphrase-generation expects this format
             input_text = f"paraphrase: {text}"
-            input_ids = self.tokenizer.encode(input_text, return_tensors="pt", max_length=128, truncation=True)
+            input_ids = self.tokenizer.encode(input_text, return_tensors="pt", max_length=512, truncation=True)
             
-            # Generate with simple parameters
+            # Generate with optimized parameters for paraphrasing
+            generation_params = {
+                "max_length": 512,
+                "num_return_sequences": min(num_alternatives, 3),
+                "num_beams": 5,
+                "early_stopping": True,
+                "do_sample": True,
+                "top_p": 0.9,
+                "no_repeat_ngram_size": 3,
+            }
+            
+            # Style-specific parameters
+            if style == "creative":
+                generation_params.update({"temperature": 1.3, "top_p": 0.8})
+            elif style == "formal":
+                generation_params.update({"temperature": 0.7, "num_beams": 3})
+            elif style == "casual":
+                generation_params.update({"temperature": 1.1, "top_p": 0.85})
+            else:
+                generation_params.update({"temperature": 1.0})
+            
             with torch.no_grad():
-                outputs = self.model.generate(
-                    input_ids,
-                    max_length=128,
-                    num_return_sequences=min(num_alternatives, 3),
-                    num_beams=4,
-                    early_stopping=True,
-                    do_sample=True,
-                    temperature=1.2 if style == "creative" else 0.8,
-                    top_p=0.9
-                )
+                outputs = self.model.generate(input_ids, **generation_params)
             
             results = [self.tokenizer.decode(o, skip_special_tokens=True) for o in outputs]
             
-            # Clean up results
+            # Clean up results and filter out poor paraphrases
             cleaned_results = []
             for result in results:
-                if result and result.lower() != text.lower():
+                if result and result.lower().strip() != text.lower().strip():
+                    # Remove any remaining "paraphrase:" prefix
+                    if result.lower().startswith("paraphrase:"):
+                        result = result[11:].strip()
                     cleaned_results.append(result.strip())
             
-            # If no good results, return variations
-            if not cleaned_results:
+            # If we got good results, return them
+            if cleaned_results:
+                return cleaned_results[:num_alternatives]
+            else:
+                # Fall back to our reliable method
                 return self._fallback_paraphrase(text, style, num_alternatives)
                 
-            return cleaned_results[:num_alternatives]
-            
         except Exception as e:
             logging.error(f"Transformers paraphrasing failed: {e}")
             return self._fallback_paraphrase(text, style, num_alternatives)
