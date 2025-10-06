@@ -9,7 +9,7 @@ export class AIParaphraseService {
   private readonly pythonScriptPath = path.join(
     process.cwd(),
     'scripts',
-    'simple_paraphraser.py',
+    'paraphrase_model.py',
   );
   private readonly pythonExecutable = this.getPythonExecutable();
 
@@ -103,18 +103,18 @@ export class AIParaphraseService {
         resolve(results);
       });
 
-      // Set timeout to prevent hanging - much faster for simple script
+      // Set timeout to handle AI model loading
       setTimeout(() => {
         python.kill();
         reject(new Error('Python script timeout'));
-      }, 3000); // 3 second timeout
+      }, 20000); // 20 second timeout for AI models
     });
   }
 
   async isAvailable(): Promise<boolean> {
     try {
-      // Simple check - just verify Python is available
-      const python = spawn(this.pythonExecutable, ['-c', 'print("OK")']);
+      // Check if transformers is available
+      const python = spawn(this.pythonExecutable, ['-c', 'import transformers; print("OK")']);
 
       return new Promise((resolve) => {
         let success = false;
@@ -137,7 +137,7 @@ export class AIParaphraseService {
         setTimeout(() => {
           python.kill();
           resolve(false);
-        }, 1000);
+        }, 2000);
       });
     } catch {
       return false;

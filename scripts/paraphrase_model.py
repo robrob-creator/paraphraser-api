@@ -9,8 +9,8 @@ logging.basicConfig(level=logging.ERROR)
 
 class ParaphraseModel:
     def __init__(self):
-        # Use a lightweight but effective paraphrasing model
-        self.model_name = "humarin/chatgpt_paraphraser_on_T5_base"
+        # Use a proven paraphrasing model
+        self.model_name = "ramsrigouthamg/t5_paraphraser"
         self.tokenizer = None
         self.model = None
         self.load_model()
@@ -57,48 +57,41 @@ class ParaphraseModel:
             return [text]  # Return original text if paraphrasing fails
     
     def prepare_input(self, text, style):
-        # This model expects "paraphrase:" prefix
-        return f"paraphrase: {text}"
+        # This model expects specific format
+        return f"paraphrase: {text} </s>"
     
     def get_generation_params(self, style, num_alternatives):
-        # Optimized parameters for T5-base paraphrasing model
+        # Optimized parameters for T5 paraphrasing model
         base_params = {
-            "max_length": 100,
+            "max_length": 128,
             "min_length": 10,
             "num_return_sequences": max(1, num_alternatives),
-            "no_repeat_ngram_size": 2,
+            "num_beams": 4,
             "early_stopping": True,
-            "do_sample": True,
-            "length_penalty": 1.0,
+            "do_sample": False,  # Use beam search for more consistent results
         }
         
         if style == "creative":
-            # Higher randomness for creative paraphrasing
+            # Add some sampling for creativity
             base_params.update({
-                "temperature": 1.3,
+                "do_sample": True,
+                "temperature": 1.2,
                 "top_p": 0.8,
-                "top_k": 50,
+                "num_beams": 6,
             })
         elif style == "formal":
-            # More conservative for formal tone
+            # More conservative beam search
             base_params.update({
-                "temperature": 0.8,
-                "top_p": 0.95,
-                "top_k": 40,
+                "num_beams": 3,
+                "length_penalty": 1.2,
             })
         elif style == "casual":
-            # Moderate randomness for casual tone
+            # Balanced approach
             base_params.update({
-                "temperature": 1.1,
-                "top_p": 0.85,
-                "top_k": 45,
-            })
-        else:
-            # Default balanced parameters
-            base_params.update({
+                "do_sample": True,
                 "temperature": 1.0,
                 "top_p": 0.9,
-                "top_k": 50,
+                "num_beams": 4,
             })
         
         return base_params

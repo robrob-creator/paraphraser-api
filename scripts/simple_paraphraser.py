@@ -9,14 +9,15 @@ import re
 
 class SimpleParaphraser:
     def __init__(self):
-        # Word replacement dictionaries
+        # Word replacement dictionaries - logically appropriate synonyms
         self.synonyms = {
             'quick': ['fast', 'rapid', 'swift', 'speedy'],
-            'brown': ['tan', 'chestnut', 'auburn', 'russet'],
+            'brown': ['reddish', 'russet', 'bronze-colored', 'copper-colored'],
             'jumps': ['leaps', 'bounds', 'springs', 'hops'],
             'lazy': ['idle', 'sluggish', 'inactive', 'lethargic'],
-            'dog': ['canine', 'hound', 'pup', 'animal'],
-            'nice': ['pleasant', 'lovely', 'beautiful', 'wonderful'],
+            'dog': ['canine', 'hound', 'pup', 'mutt'],
+            'fox': ['vixen', 'reynard', 'vulpine creature', 'red fox'],
+            'nice': ['pleasant', 'lovely', 'wonderful', 'delightful'],
             'good': ['excellent', 'great', 'fine', 'wonderful'],
             'big': ['large', 'huge', 'enormous', 'massive'],
             'small': ['tiny', 'little', 'petite', 'compact'],
@@ -88,13 +89,24 @@ class SimpleParaphraser:
         words = text.split()
         result_words = []
         
-        for word in words:
+        # Track context to avoid illogical combinations
+        animal_context = any(word in ['fox', 'dog', 'cat', 'bird'] for word in words)
+        
+        for i, word in enumerate(words):
             # Remove punctuation for lookup
             clean_word = re.sub(r'[^\w]', '', word.lower())
             punctuation = re.sub(r'[\w]', '', word)
             
             if clean_word in self.synonyms:
                 synonyms = self.synonyms[clean_word]
+                
+                # Filter synonyms based on context
+                if clean_word == 'brown' and animal_context:
+                    # For animals, use more natural color descriptions
+                    synonyms = ['reddish', 'russet', 'copper-colored', 'dark-furred']
+                elif clean_word == 'fox':
+                    # Vary fox references more naturally
+                    synonyms = ['cunning fox', 'swift fox', 'woodland creature', 'red fox']
                 
                 # Choose synonym based on style and variation
                 if style == 'creative':
