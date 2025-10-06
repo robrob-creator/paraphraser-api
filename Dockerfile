@@ -1,14 +1,15 @@
-# Use Node.js with Python support
-FROM node:18-alpine
+# Use Node.js with Python support (Debian-based for PyTorch compatibility)
+FROM node:18-bullseye-slim
 
-# Install Python and pip
-RUN apk add --no-cache \
+# Install Python and build dependencies
+RUN apt-get update && apt-get install -y \
     python3 \
-    py3-pip \
+    python3-pip \
+    python3-venv \
     python3-dev \
-    build-base \
-    py3-torch \
-    py3-numpy
+    build-essential \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
 # Set working directory
 WORKDIR /app
@@ -17,7 +18,10 @@ WORKDIR /app
 RUN python3 -m venv /app/venv
 ENV PATH="/app/venv/bin:$PATH"
 
-# Copy Python requirements and install Python dependencies in venv
+# Install PyTorch CPU-only first (more reliable)
+RUN pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+# Copy Python requirements and install other Python dependencies in venv
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
