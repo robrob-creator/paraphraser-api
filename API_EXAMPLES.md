@@ -3,11 +3,13 @@
 ## Base URLs
 
 ### Production (Railway)
+
 ```
 https://web-production-61c7.up.railway.app
 ```
 
 ### Local Development
+
 ```
 http://localhost:3000
 ```
@@ -15,11 +17,13 @@ http://localhost:3000
 ## Health Check
 
 ### Production
+
 ```bash
 curl -X GET https://web-production-61c7.up.railway.app/paraphrase/health
 ```
 
 ### Local
+
 ```bash
 curl -X GET http://localhost:3000/paraphrase/health
 ```
@@ -245,9 +249,11 @@ curl -X POST http://localhost:3000/paraphrase/bulk \
 ## API Documentation
 
 ### Production
+
 Visit https://web-production-61c7.up.railway.app/api-docs for interactive Swagger documentation.
 
 ### Local
+
 Visit http://localhost:3000/api-docs for interactive Swagger documentation.
 
 ## Live Production Testing
@@ -255,6 +261,7 @@ Visit http://localhost:3000/api-docs for interactive Swagger documentation.
 You can test the live API directly:
 
 ### Quick Test (Production)
+
 ```bash
 curl -X POST https://web-production-61c7.up.railway.app/paraphrase \
   -H "Content-Type: application/json" \
@@ -262,11 +269,13 @@ curl -X POST https://web-production-61c7.up.railway.app/paraphrase \
 ```
 
 ### Health Check (Production)
+
 ```bash
 curl -X GET https://web-production-61c7.up.railway.app/paraphrase/health
 ```
 
 ### AI Paraphrasing Test (Production)
+
 ```bash
 curl -X POST https://web-production-61c7.up.railway.app/paraphrase \
   -H "Content-Type: application/json" \
