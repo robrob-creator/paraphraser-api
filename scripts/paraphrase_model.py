@@ -55,16 +55,9 @@ class ParaphraseModel:
             return [text]  # Return original text if paraphrasing fails
     
     def prepare_input(self, text, style):
-        if style == "formal":
-            return f"rewrite this text in a formal way: {text}"
-        elif style == "casual":
-            return f"rewrite this text in a casual way: {text}"
-        elif style == "academic":
-            return f"rewrite this text in an academic way: {text}"
-        elif style == "creative":
-            return f"rewrite this text creatively: {text}"
-        else:
-            return f"paraphrase: {text}"
+        # Use simple paraphrase prompt for all styles to avoid adding unwanted phrases
+        # The T5 model will naturally vary its output based on generation parameters
+        return f"paraphrase: {text}"
     
     def get_generation_params(self, style, num_alternatives):
         base_params = {
@@ -76,35 +69,78 @@ class ParaphraseModel:
         }
         
         if style == "creative":
+            # Higher randomness for creative paraphrasing
             base_params.update({
-                "temperature": 1.5,
-                "top_p": 0.8,
-                "num_beams": 5,
-                "diversity_penalty": 0.5,
+                "temperature": 1.8,
+                "top_p": 0.75,
+                "num_beams": 6,
+                "diversity_penalty": 0.8,
             })
-        elif style == "formal" or style == "academic":
+        elif style == "formal":
+            # More conservative for formal tone
             base_params.update({
-                "temperature": 0.8,
+                "temperature": 0.6,
+                "top_p": 0.9,
+                "num_beams": 4,
+                "diversity_penalty": 0.2,
+            })
+        elif style == "casual":
+            # Moderate randomness for casual tone
+            base_params.update({
+                "temperature": 1.3,
                 "top_p": 0.8,
-                "num_beams": 5,
+                "num_beams": 4,
+                "diversity_penalty": 0.4,
             })
         else:
+            # Default balanced parameters
             base_params.update({
-                "temperature": 1.2,
+                "temperature": 1.0,
                 "top_p": 0.85,
                 "num_beams": 4,
+                "diversity_penalty": 0.3,
             })
         
         return base_params
     
     def post_process(self, text, style):
+        # Clean up the text first
+        text = text.strip()
+        
         # Style-specific post-processing
         if style == "formal":
-            text = text.replace("can't", "cannot").replace("won't", "will not")
+            # Convert contractions to full forms for formal style
+            text = text.replace("can't", "cannot")
+            text = text.replace("won't", "will not") 
+            text = text.replace("don't", "do not")
+            text = text.replace("isn't", "is not")
+            text = text.replace("aren't", "are not")
+            text = text.replace("wasn't", "was not")
+            text = text.replace("weren't", "were not")
+            text = text.replace("haven't", "have not")
+            text = text.replace("hasn't", "has not")
+            text = text.replace("hadn't", "had not")
+            text = text.replace("shouldn't", "should not")
+            text = text.replace("wouldn't", "would not")
+            text = text.replace("couldn't", "could not")
+            
         elif style == "casual":
-            text = text.replace("cannot", "can't").replace("will not", "won't")
+            # Convert to contractions for casual style
+            text = text.replace("cannot", "can't")
+            text = text.replace("will not", "won't")
+            text = text.replace("do not", "don't")
+            text = text.replace("is not", "isn't")
+            text = text.replace("are not", "aren't")
+            text = text.replace("was not", "wasn't")
+            text = text.replace("were not", "weren't")
+            text = text.replace("have not", "haven't")
+            text = text.replace("has not", "hasn't")
+            text = text.replace("had not", "hadn't")
+            text = text.replace("should not", "shouldn't")
+            text = text.replace("would not", "wouldn't")
+            text = text.replace("could not", "couldn't")
         
-        return text.strip()
+        return text
 
 # Global model instance (loaded once)
 model_instance = None
