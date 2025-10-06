@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: paraphraser-api
+    env: node
+    plan: starter
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: HUGGINGFACE_API_KEY
+        sync: false
+      - key: THROTTLE_TTL
+        value: 60
+      - key: THROTTLE_LIMIT
+        value: 10
+    autoDeploy: true
+    region: oregon
+    scaling:
+      minInstances: 1
+      maxInstances: 1
