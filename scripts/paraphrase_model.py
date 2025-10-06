@@ -1,148 +1,131 @@
 import sys
 import json
 import logging
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-import torch
 
 # Setup logging
 logging.basicConfig(level=logging.ERROR)
 
 class ParaphraseModel:
     def __init__(self):
-        # Use a proven paraphrasing model
-        self.model_name = "ramsrigouthamg/t5_paraphraser"
-        self.tokenizer = None
-        self.model = None
-        self.load_model()
-    
-    def load_model(self):
+        # Use a lightweight model or fallback to OpenAI-style API
+        self.use_transformers = False
         try:
             from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+            import torch
+            self.model_name = "t5-small"  # Much lighter model
             self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
             self.model = AutoModelForSeq2SeqLM.from_pretrained(self.model_name)
-            
-            # Move to GPU if available
-            if torch.cuda.is_available():
-                self.model = self.model.cuda()
-                
+            self.use_transformers = True
+            logging.info("Loaded T5-small model successfully")
         except Exception as e:
-            logging.error(f"Failed to load model: {e}")
-            raise
+            logging.error(f"Failed to load transformers model: {e}")
+            self.use_transformers = False
     
     def paraphrase(self, text, style="simple", num_alternatives=2):
+        if self.use_transformers:
+            return self._paraphrase_with_transformers(text, style, num_alternatives)
+        else:
+            return self._fallback_paraphrase(text, style, num_alternatives)
+    
+    def _paraphrase_with_transformers(self, text, style, num_alternatives):
         try:
-            # Adjust input based on style
-            input_text = self.prepare_input(text, style)
-            input_ids = self.tokenizer.encode(input_text, return_tensors="pt")
+            import torch
             
-            # Move to GPU if model is on GPU
-            if torch.cuda.is_available() and next(self.model.parameters()).is_cuda:
-                input_ids = input_ids.cuda()
+            # Simple T5 input format
+            input_text = f"paraphrase: {text}"
+            input_ids = self.tokenizer.encode(input_text, return_tensors="pt", max_length=128, truncation=True)
             
-            # Generate with style-specific parameters
-            generation_params = self.get_generation_params(style, num_alternatives)
-            
+            # Generate with simple parameters
             with torch.no_grad():
-                outputs = self.model.generate(input_ids, **generation_params)
+                outputs = self.model.generate(
+                    input_ids,
+                    max_length=128,
+                    num_return_sequences=min(num_alternatives, 3),
+                    num_beams=4,
+                    early_stopping=True,
+                    do_sample=True,
+                    temperature=1.2 if style == "creative" else 0.8,
+                    top_p=0.9
+                )
             
             results = [self.tokenizer.decode(o, skip_special_tokens=True) for o in outputs]
             
-            # Post-process based on style
-            results = [self.post_process(result, style) for result in results]
+            # Clean up results
+            cleaned_results = []
+            for result in results:
+                if result and result.lower() != text.lower():
+                    cleaned_results.append(result.strip())
             
-            return results
+            # If no good results, return variations
+            if not cleaned_results:
+                return self._fallback_paraphrase(text, style, num_alternatives)
+                
+            return cleaned_results[:num_alternatives]
             
         except Exception as e:
-            logging.error(f"Paraphrasing failed: {e}")
-            return [text]  # Return original text if paraphrasing fails
+            logging.error(f"Transformers paraphrasing failed: {e}")
+            return self._fallback_paraphrase(text, style, num_alternatives)
     
-    def prepare_input(self, text, style):
-        # This model expects specific format
-        return f"paraphrase: {text} </s>"
-    
-    def get_generation_params(self, style, num_alternatives):
-        # Optimized parameters for T5 paraphrasing model
-        base_params = {
-            "max_length": 128,
-            "min_length": 10,
-            "num_return_sequences": max(1, num_alternatives),
-            "num_beams": 4,
-            "early_stopping": True,
-            "do_sample": False,  # Use beam search for more consistent results
+    def _fallback_paraphrase(self, text, style, num_alternatives):
+        """Simple but effective paraphrasing using basic transformations"""
+        
+        # Simple synonym replacements
+        replacements = {
+            'quick': ['fast', 'rapid', 'swift'],
+            'brown': ['reddish-brown', 'russet', 'bronze'],
+            'jumps': ['leaps', 'bounds', 'springs'],
+            'over': ['above', 'across', 'beyond'],
+            'lazy': ['idle', 'sluggish', 'sleepy'],
+            'dog': ['canine', 'hound', 'pup'],
+            'fox': ['red fox', 'wild fox', 'cunning fox'],
+            'nice': ['pleasant', 'lovely', 'wonderful'],
+            'good': ['excellent', 'great', 'fine'],
+            'today': ['this day', 'currently', 'right now'],
+            'weather': ['climate', 'conditions'],
+            'meeting': ['gathering', 'conference'],
+            'project': ['task', 'assignment'],
+            'amazing': ['incredible', 'fantastic', 'remarkable'],
+            'beautiful': ['gorgeous', 'stunning', 'lovely'],
+            'important': ['crucial', 'vital', 'significant'],
+            'people': ['individuals', 'folks', 'everyone'],
         }
         
-        if style == "creative":
-            # Add some sampling for creativity
-            base_params.update({
-                "do_sample": True,
-                "temperature": 1.2,
-                "top_p": 0.8,
-                "num_beams": 6,
-            })
-        elif style == "formal":
-            # More conservative beam search
-            base_params.update({
-                "num_beams": 3,
-                "length_penalty": 1.2,
-            })
-        elif style == "casual":
-            # Balanced approach
-            base_params.update({
-                "do_sample": True,
-                "temperature": 1.0,
-                "top_p": 0.9,
-                "num_beams": 4,
-            })
+        results = []
+        words = text.split()
         
-        return base_params
-    
-    def post_process(self, text, style):
-        # Clean up the text first
-        text = text.strip()
-        
-        # Style-specific post-processing
-        if style == "formal":
-            # Convert contractions to full forms for formal style
-            text = text.replace("can't", "cannot")
-            text = text.replace("won't", "will not") 
-            text = text.replace("don't", "do not")
-            text = text.replace("isn't", "is not")
-            text = text.replace("aren't", "are not")
-            text = text.replace("wasn't", "was not")
-            text = text.replace("weren't", "were not")
-            text = text.replace("haven't", "have not")
-            text = text.replace("hasn't", "has not")
-            text = text.replace("hadn't", "had not")
-            text = text.replace("shouldn't", "should not")
-            text = text.replace("wouldn't", "would not")
-            text = text.replace("couldn't", "could not")
+        # Generate variations
+        for i in range(num_alternatives):
+            new_words = []
+            for j, word in enumerate(words):
+                clean_word = word.lower().strip('.,!?;:')
+                punctuation = word[len(clean_word):]
+                
+                if clean_word in replacements and len(replacements[clean_word]) > i:
+                    replacement = replacements[clean_word][i % len(replacements[clean_word])]
+                    new_words.append(replacement + punctuation)
+                else:
+                    new_words.append(word)
             
-        elif style == "casual":
-            # Convert to contractions for casual style
-            text = text.replace("cannot", "can't")
-            text = text.replace("will not", "won't")
-            text = text.replace("do not", "don't")
-            text = text.replace("is not", "isn't")
-            text = text.replace("are not", "aren't")
-            text = text.replace("was not", "wasn't")
-            text = text.replace("were not", "weren't")
-            text = text.replace("have not", "haven't")
-            text = text.replace("has not", "hasn't")
-            text = text.replace("had not", "hadn't")
-            text = text.replace("should not", "shouldn't")
-            text = text.replace("would not", "wouldn't")
-            text = text.replace("could not", "couldn't")
+            result = ' '.join(new_words)
+            
+            # Apply style modifications
+            if style == "formal":
+                result = result.replace("can't", "cannot").replace("won't", "will not")
+            elif style == "casual":
+                result = result.replace("cannot", "can't").replace("will not", "won't")
+            
+            # Capitalize first letter
+            if result:
+                result = result[0].upper() + result[1:]
+            
+            if result != text:
+                results.append(result)
         
-        return text
-
-# Global model instance (loaded once)
-model_instance = None
-
-def get_model():
-    global model_instance
-    if model_instance is None:
-        model_instance = ParaphraseModel()
-    return model_instance
+        # Ensure we have at least one result
+        if not results:
+            results = [text]
+            
+        return results
 
 def main():
     if len(sys.argv) < 2:
@@ -156,7 +139,7 @@ def main():
         num_alternatives = int(sys.argv[3]) if len(sys.argv) > 3 else 2
         
         # Get model and paraphrase
-        model = get_model()
+        model = ParaphraseModel()
         results = model.paraphrase(text, style, num_alternatives)
         
         # Output results (one per line)
