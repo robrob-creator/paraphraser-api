@@ -91,10 +91,11 @@ Currently supports English (en) with plans for additional languages.`,
     console.log(`🔍 Health Check: ${baseUrl}/paraphrase/health`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(
-      `🤖 AI Paraphrasing: ${process.env.USE_AI_PARAPHRASE === 'true' ? 'enabled' : 'disabled'}`,
+      `🤖 Smart Fallback System: Python AI → Cloud AI → Advanced → Simple`,
     );
+    console.log(`🐍 Python AI: Available for creative, formal, casual styles`);
     console.log(
-      `⚡ Advanced Paraphrasing: ${process.env.USE_ADVANCED_PARAPHRASE === 'true' ? 'enabled' : 'disabled'}`,
+      `☁️ Cloud AI: Hugging Face API fallback ${process.env.HUGGINGFACE_API_KEY ? 'configured' : 'not configured'}`,
     );
   } catch (error) {
     console.error('❌ Failed to start server:', error);

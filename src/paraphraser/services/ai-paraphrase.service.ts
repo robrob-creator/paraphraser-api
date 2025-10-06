@@ -10,6 +10,12 @@ export class AIParaphraseService {
     'scripts',
     'paraphrase_model.py',
   );
+  private readonly pythonExecutable = path.join(
+    process.cwd(),
+    '.venv',
+    'bin',
+    'python',
+  );
 
   async paraphrase(
     text: string,
@@ -43,9 +49,14 @@ export class AIParaphraseService {
       let python;
 
       try {
-        python = spawn('python3', [this.pythonScriptPath, text, style, '3']);
+        python = spawn(this.pythonExecutable, [
+          this.pythonScriptPath,
+          text,
+          style,
+          '3',
+        ]);
       } catch (error) {
-        reject(new Error(`Failed to spawn python3: ${error.message}`));
+        reject(new Error(`Failed to spawn python: ${error.message}`));
         return;
       }
 
@@ -90,29 +101,34 @@ export class AIParaphraseService {
 
   async isAvailable(): Promise<boolean> {
     try {
-      // Quick check if python3 is available without executing the script
-      const python = spawn('which', ['python3']);
+      // Check if virtual environment Python is available and has required packages
+      const python = spawn(this.pythonExecutable, [
+        '-c',
+        'import transformers, torch, sentencepiece; print("OK")',
+      ]);
 
       return new Promise((resolve) => {
-        let found = false;
+        let success = false;
 
-        python.stdout.on('data', () => {
-          found = true;
+        python.stdout.on('data', (data) => {
+          if (data.toString().trim() === 'OK') {
+            success = true;
+          }
         });
 
         python.on('close', (code) => {
-          resolve(found && code === 0);
+          resolve(success && code === 0);
         });
 
         python.on('error', () => {
           resolve(false);
         });
 
-        // Timeout after 500ms
+        // Timeout after 2 seconds (importing transformers can take a moment)
         setTimeout(() => {
           python.kill();
           resolve(false);
-        }, 500);
+        }, 2000);
       });
     } catch {
       return false;
