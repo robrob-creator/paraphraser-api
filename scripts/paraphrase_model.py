@@ -9,17 +9,17 @@ logging.basicConfig(level=logging.ERROR)
 
 class ParaphraseModel:
     def __init__(self):
-        # Use a more robust paraphrasing model
-        self.model_name = "tuner007/pegasus_paraphrase"
+        # Use a lightweight but effective paraphrasing model
+        self.model_name = "humarin/chatgpt_paraphraser_on_T5_base"
         self.tokenizer = None
         self.model = None
         self.load_model()
     
     def load_model(self):
         try:
-            from transformers import PegasusForConditionalGeneration, PegasusTokenizer
-            self.tokenizer = PegasusTokenizer.from_pretrained(self.model_name)
-            self.model = PegasusForConditionalGeneration.from_pretrained(self.model_name)
+            from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+            self.model = AutoModelForSeq2SeqLM.from_pretrained(self.model_name)
             
             # Move to GPU if available
             if torch.cuda.is_available():
@@ -57,46 +57,48 @@ class ParaphraseModel:
             return [text]  # Return original text if paraphrasing fails
     
     def prepare_input(self, text, style):
-        # PEGASUS paraphraser works better with direct input
-        return text
+        # This model expects "paraphrase:" prefix
+        return f"paraphrase: {text}"
     
     def get_generation_params(self, style, num_alternatives):
-        # PEGASUS parameters optimized for paraphrasing
+        # Optimized parameters for T5-base paraphrasing model
         base_params = {
-            "max_length": 60,  # PEGASUS works better with shorter max_length
+            "max_length": 100,
+            "min_length": 10,
             "num_return_sequences": max(1, num_alternatives),
             "no_repeat_ngram_size": 2,
             "early_stopping": True,
             "do_sample": True,
+            "length_penalty": 1.0,
         }
         
         if style == "creative":
             # Higher randomness for creative paraphrasing
             base_params.update({
-                "temperature": 1.5,
+                "temperature": 1.3,
                 "top_p": 0.8,
-                "num_beams": 4,
+                "top_k": 50,
             })
         elif style == "formal":
             # More conservative for formal tone
             base_params.update({
-                "temperature": 0.7,
-                "top_p": 0.9,
-                "num_beams": 3,
+                "temperature": 0.8,
+                "top_p": 0.95,
+                "top_k": 40,
             })
         elif style == "casual":
             # Moderate randomness for casual tone
             base_params.update({
-                "temperature": 1.2,
+                "temperature": 1.1,
                 "top_p": 0.85,
-                "num_beams": 3,
+                "top_k": 45,
             })
         else:
             # Default balanced parameters
             base_params.update({
                 "temperature": 1.0,
                 "top_p": 0.9,
-                "num_beams": 3,
+                "top_k": 50,
             })
         
         return base_params
