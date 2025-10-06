@@ -1,0 +1,43 @@
+# Railway ignore file - similar to .gitignore but for Railway deployments
+
+# Development files
+.env.local
+.env.development
+*.log
+logs/
+.vscode/
+.idea/
+
+# Test files
+test/
+coverage/
+*.test.ts
+*.spec.ts
+jest.config.js
+
+# Documentation (optional - remove if you want docs deployed)
+*.md
+docs/
+
+# AI setup files (include if you're not using AI features)
+scripts/
+setup-ai.sh
+AI_SETUP.md
+
+# Local development
+.env.example
+.env.railway
+node_modules/.cache
+
+# Build artifacts that will be rebuilt
+dist/
+build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+*.swp
+*.swo
+*~

@@ -1,0 +1,16 @@
+version: 2
+build:
+  commands:
+    - npm ci
+    - npm run build
+deploy:
+  startCommand: npm run start:prod
+  healthcheckPath: /paraphrase/health
+  healthcheckTimeout: 300
+  restartPolicyType: on_failure
+  restartPolicyMaxRetries: 3
+variables:
+  NODE_ENV: production
+  USE_AI_PARAPHRASE: false
+  USE_ADVANCED_PARAPHRASE: true
+  PORT: $PORT
