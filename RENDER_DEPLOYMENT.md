@@ -26,6 +26,7 @@ This guide covers deploying the Paraphraser API to Render with full Python + Nod
 ### 3. Configuration Details
 
 The deployment includes:
+
 - **Runtime**: Node.js with Python support
 - **Build**: `npm ci && npm run build`
 - **Start**: `npm run start:prod`
@@ -35,11 +36,13 @@ The deployment includes:
 ### 4. Environment Variables
 
 Required environment variables:
+
 - `HUGGINGFACE_API_KEY`: Your Hugging Face API token
 - `NODE_ENV`: production (auto-set)
 - `PORT`: 10000 (auto-set by Render)
 
 Optional environment variables:
+
 - `THROTTLE_TTL`: 60 (rate limit window in seconds)
 - `THROTTLE_LIMIT`: 10 (requests per window)
 
@@ -48,11 +51,13 @@ Optional environment variables:
 Once deployed, your API will be available at `https://your-app-name.onrender.com`
 
 **Health Check:**
+
 ```
 GET /health
 ```
 
 **Paraphrase Text:**
+
 ```
 POST /paraphrase
 Content-Type: application/json
@@ -64,6 +69,7 @@ Content-Type: application/json
 ```
 
 **Available Styles:**
+
 - `simple`: Basic paraphrasing
 - `advanced`: Enhanced vocabulary and structure
 - `creative`: Most creative with AI assistance
@@ -91,6 +97,7 @@ curl -X POST https://your-app-name.onrender.com/paraphrase \
 ### 8. Scaling
 
 For higher traffic:
+
 1. Upgrade to a higher Render plan
 2. Adjust `THROTTLE_LIMIT` and `THROTTLE_TTL` as needed
 3. Consider enabling auto-scaling in render.yaml
@@ -98,6 +105,7 @@ For higher traffic:
 ## Architecture Notes
 
 The API uses a smart fallback system:
+
 1. **Python AI** (T5 model) - Primary for creative styles
 2. **Cloud AI** (Hugging Face API) - Fallback for AI processing
 3. **Advanced** - Algorithmic paraphrasing
