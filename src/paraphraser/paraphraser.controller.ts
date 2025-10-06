@@ -6,6 +6,7 @@ import {
   ValidationPipe,
   HttpException,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { ParaphraserService } from './paraphraser.service';
@@ -20,6 +21,8 @@ import { AIParaphraseService } from './services/ai-paraphrase.service';
 @ApiTags('paraphrase')
 @Controller('paraphrase')
 export class ParaphraserController {
+  private readonly logger = new Logger(ParaphraserController.name);
+
   constructor(
     private readonly paraphraserService: ParaphraserService,
     private readonly aiService: AIParaphraseService,
@@ -61,7 +64,22 @@ export class ParaphraserController {
     },
   })
   async healthCheck() {
-    const aiAvailable = await this.aiService.isAvailable();
+    // Check AI availability without blocking the health check
+    let aiAvailable = false;
+    try {
+      aiAvailable = await Promise.race([
+        this.aiService.isAvailable(),
+        new Promise<boolean>((resolve) =>
+          setTimeout(() => resolve(false), 1000),
+        ),
+      ]);
+    } catch (error) {
+      this.logger?.warn(
+        'AI service check failed during health check',
+        error.message,
+      );
+      aiAvailable = false;
+    }
 
     return {
       status: 'ok',
