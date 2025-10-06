@@ -9,15 +9,17 @@ logging.basicConfig(level=logging.ERROR)
 
 class ParaphraseModel:
     def __init__(self):
-        self.model_name = "Vamsi/T5_Paraphrase_Paws"
+        # Use a more robust paraphrasing model
+        self.model_name = "tuner007/pegasus_paraphrase"
         self.tokenizer = None
         self.model = None
         self.load_model()
     
     def load_model(self):
         try:
-            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-            self.model = AutoModelForSeq2SeqLM.from_pretrained(self.model_name)
+            from transformers import PegasusForConditionalGeneration, PegasusTokenizer
+            self.tokenizer = PegasusTokenizer.from_pretrained(self.model_name)
+            self.model = PegasusForConditionalGeneration.from_pretrained(self.model_name)
             
             # Move to GPU if available
             if torch.cuda.is_available():
@@ -55,15 +57,15 @@ class ParaphraseModel:
             return [text]  # Return original text if paraphrasing fails
     
     def prepare_input(self, text, style):
-        # Use simple paraphrase prompt for all styles to avoid adding unwanted phrases
-        # The T5 model will naturally vary its output based on generation parameters
-        return f"paraphrase: {text}"
+        # PEGASUS paraphraser works better with direct input
+        return text
     
     def get_generation_params(self, style, num_alternatives):
+        # PEGASUS parameters optimized for paraphrasing
         base_params = {
-            "max_length": 150,
+            "max_length": 60,  # PEGASUS works better with shorter max_length
             "num_return_sequences": max(1, num_alternatives),
-            "no_repeat_ngram_size": 3,
+            "no_repeat_ngram_size": 2,
             "early_stopping": True,
             "do_sample": True,
         }
@@ -71,34 +73,30 @@ class ParaphraseModel:
         if style == "creative":
             # Higher randomness for creative paraphrasing
             base_params.update({
-                "temperature": 1.8,
-                "top_p": 0.75,
-                "num_beams": 6,
-                "diversity_penalty": 0.8,
+                "temperature": 1.5,
+                "top_p": 0.8,
+                "num_beams": 4,
             })
         elif style == "formal":
             # More conservative for formal tone
             base_params.update({
-                "temperature": 0.6,
+                "temperature": 0.7,
                 "top_p": 0.9,
-                "num_beams": 4,
-                "diversity_penalty": 0.2,
+                "num_beams": 3,
             })
         elif style == "casual":
             # Moderate randomness for casual tone
             base_params.update({
-                "temperature": 1.3,
-                "top_p": 0.8,
-                "num_beams": 4,
-                "diversity_penalty": 0.4,
+                "temperature": 1.2,
+                "top_p": 0.85,
+                "num_beams": 3,
             })
         else:
             # Default balanced parameters
             base_params.update({
                 "temperature": 1.0,
-                "top_p": 0.85,
-                "num_beams": 4,
-                "diversity_penalty": 0.3,
+                "top_p": 0.9,
+                "num_beams": 3,
             })
         
         return base_params
