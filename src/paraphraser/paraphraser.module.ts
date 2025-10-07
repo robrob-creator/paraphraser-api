@@ -8,6 +8,7 @@ import { AIParaphraseStrategy } from './strategies/ai-paraphrase.strategy';
 import { CloudAIParaphraseStrategy } from './strategies/cloud-ai-paraphrase.strategy';
 import { AIParaphraseService } from './services/ai-paraphrase.service';
 import { CloudAIParaphraseService } from './services/cloud-ai-paraphrase.service';
+import { GrammarCorrectionService } from './services/grammar-correction.service';
 
 @Module({
   imports: [ConfigModule],
@@ -20,6 +21,7 @@ import { CloudAIParaphraseService } from './services/cloud-ai-paraphrase.service
     CloudAIParaphraseStrategy,
     AIParaphraseService,
     CloudAIParaphraseService,
+    GrammarCorrectionService,
   ],
   exports: [ParaphraserService],
 })

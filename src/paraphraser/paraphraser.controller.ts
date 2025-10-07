@@ -17,6 +17,8 @@ import {
 } from './dto/paraphrase-response.dto';
 import { Throttle } from '@nestjs/throttler';
 import { AIParaphraseService } from './services/ai-paraphrase.service';
+import { GrammarCorrectionService } from './services/grammar-correction.service';
+import { GrammarCorrectionDto } from './dto/grammar-correction.dto';
 
 @ApiTags('paraphrase')
 @Controller('paraphrase')
@@ -26,6 +28,7 @@ export class ParaphraserController {
   constructor(
     private readonly paraphraserService: ParaphraserService,
     private readonly aiService: AIParaphraseService,
+    private readonly grammarService: GrammarCorrectionService,
   ) {}
 
   @Get('health')
@@ -265,6 +268,115 @@ export class ParaphraserController {
           timestamp: new Date().toISOString(),
         } as ParaphraseErrorDto,
         HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  @Post('grammar-check')
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
+  @ApiOperation({
+    summary: 'Correct grammar in text',
+    description:
+      'Detect and correct grammatical errors in the provided text. Supports basic and advanced correction levels.',
+  })
+  @ApiBody({
+    description: 'Text to be grammar checked',
+    schema: {
+      type: 'object',
+      properties: {
+        text: {
+          type: 'string',
+          description: 'Text to correct grammar for',
+          example:
+            'me and my friend was going to the store but we couldnt find it nowhere',
+        },
+        level: {
+          type: 'string',
+          enum: ['basic', 'advanced'],
+          description: 'Correction level - basic uses rules, advanced uses AI',
+          example: 'basic',
+          default: 'basic',
+        },
+      },
+      required: ['text'],
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Grammar corrected successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        originalText: {
+          type: 'string',
+          example: 'me and my friend was going to the store',
+        },
+        correctedText: {
+          type: 'string',
+          example: 'My friend and I were going to the store',
+        },
+        corrections: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              original: { type: 'string' },
+              corrected: { type: 'string' },
+              type: { type: 'string' },
+              confidence: { type: 'number' },
+            },
+          },
+        },
+        confidence: {
+          type: 'number',
+          format: 'float',
+          example: 0.9,
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input data',
+    type: ParaphraseErrorDto,
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+    type: ParaphraseErrorDto,
+  })
+  async correctGrammar(
+    @Body(ValidationPipe) grammarDto: GrammarCorrectionDto,
+  ): Promise<{
+    originalText: string;
+    correctedText: string;
+    corrections: Array<{
+      original: string;
+      corrected: string;
+      type: string;
+      confidence: number;
+    }>;
+    confidence: number;
+  }> {
+    try {
+      this.logger.log(`Grammar correction request: ${grammarDto.text}`);
+
+      const result = await this.grammarService.correctGrammar(
+        grammarDto.text,
+        grammarDto.level || 'basic',
+      );
+
+      this.logger.log(`Grammar correction completed for: ${grammarDto.text}`);
+      return result;
+    } catch (error) {
+      this.logger.error(`Grammar correction failed: ${error.message}`);
+      throw new HttpException(
+        {
+          message: 'Grammar correction failed',
+          error: error.message,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
