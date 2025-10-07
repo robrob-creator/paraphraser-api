@@ -115,7 +115,7 @@ export class ParaphraserController {
   }
 
   @Post()
-  @Throttle({ default: { limit: 5, ttl: 86400000 } })
+  @Throttle({ default: { limit: 100, ttl: 86400000 } })
   @ApiOperation({
     summary: 'Paraphrase text',
     description:
@@ -273,7 +273,7 @@ export class ParaphraserController {
   }
 
   @Post('grammar-check')
-  @Throttle({ default: { limit: 5, ttl: 86400000 } })
+  @Throttle({ default: { limit: 100, ttl: 86400000 } })
   @ApiOperation({
     summary: 'Correct grammar in text',
     description:
@@ -382,7 +382,7 @@ export class ParaphraserController {
   }
 
   @Post('bulk')
-  @Throttle({ default: { limit: 5, ttl: 86400000 } })
+  @Throttle({ default: { limit: 100, ttl: 86400000 } })
   @ApiOperation({
     summary: 'Bulk paraphrase texts',
     description:
