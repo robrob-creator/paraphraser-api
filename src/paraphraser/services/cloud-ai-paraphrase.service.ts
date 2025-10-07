@@ -17,7 +17,7 @@ export class CloudAIParaphraseService {
   }> {
     try {
       const hfApiKey = this.configService.get('HUGGINGFACE_API_KEY');
-      
+
       if (!hfApiKey) {
         throw new Error('Hugging Face API key not configured');
       }
@@ -52,7 +52,7 @@ export class CloudAIParaphraseService {
       }
 
       const results = await response.json();
-      
+
       // Handle different response formats
       if (Array.isArray(results) && results.length > 0) {
         const mainResult = results[0]?.generated_text || text;
@@ -60,7 +60,7 @@ export class CloudAIParaphraseService {
           .slice(1)
           .map((r) => r.generated_text)
           .filter(Boolean);
-        
+
         return {
           paraphrasedText: this.cleanGeneratedText(mainResult, text),
           confidence: 0.9,

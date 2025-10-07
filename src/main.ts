@@ -90,8 +90,10 @@ Currently supports English (en) with plans for additional languages.`,
     console.log(`📖 API Documentation: ${baseUrl}/api-docs`);
     console.log(`🔍 Health Check: ${baseUrl}/paraphrase/health`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🤖 Fallback System: Python AI → Advanced → Simple`);
-    console.log(`🐍 Python AI: T5 model for creative, formal, casual styles`);
+    console.log(`🤖 Fallback System: RapidAPI AI → Advanced → Simple`);
+    console.log(
+      `🌐 RapidAPI AI: External paraphrasing service for creative, formal, casual styles`,
+    );
     console.log(`🔧 Advanced: Algorithmic paraphrasing fallback`);
   } catch (error) {
     console.error('❌ Failed to start server:', error);

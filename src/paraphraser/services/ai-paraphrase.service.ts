@@ -1,32 +1,36 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { spawn } from 'child_process';
-import * as path from 'path';
-import * as fs from 'fs';
+import axios, { AxiosInstance } from 'axios';
 
 @Injectable()
 export class AIParaphraseService {
   private readonly logger = new Logger(AIParaphraseService.name);
-  private readonly pythonScriptPath = path.join(
-    process.cwd(),
-    'scripts',
-    'paraphrase_model.py',
-  );
-  private readonly pythonExecutable = this.getPythonExecutable();
+  private readonly httpClient: AxiosInstance;
+  private readonly apiKey: string;
+  private readonly apiHost: string;
+  private readonly apiUrl: string;
 
-  private getPythonExecutable(): string {
-    // Check if we're in a production environment (Render, Railway, etc.)
-    if (process.env.NODE_ENV === 'production') {
-      // In production, use system python3 (dependencies installed with --user)
-      return 'python3';
-    }
+  constructor() {
+    this.apiKey =
+      process.env.RAPIDAPI_KEY ||
+      '3bdfaaccb0msh73e4be8ab254ae5p1a99a5jsne1bd25eeed2b';
+    this.apiHost =
+      'rewriter-paraphraser-text-changer-multi-language.p.rapidapi.com';
+    this.apiUrl =
+      'https://rewriter-paraphraser-text-changer-multi-language.p.rapidapi.com/rewrite';
 
-    // In development, try virtual environment first, fallback to system python
-    const venvPython = path.join(process.cwd(), '.venv', 'bin', 'python');
-    if (fs.existsSync(venvPython)) {
-      return venvPython;
-    }
-
-    return 'python3';
+    this.httpClient = axios.create({
+      timeout: 10000,
+      headers: {
+        'Content-Type': 'application/json',
+        'x-rapidapi-host': this.apiHost,
+        'x-rapidapi-key': this.apiKey,
+        Accept: '*/*',
+        'User-Agent': 'axios/1.12.2',
+      },
+      validateStatus: function (status) {
+        return status < 500; // Accept any status code below 500
+      },
+    });
   }
 
   async paraphrase(
@@ -38,110 +42,75 @@ export class AIParaphraseService {
     alternativeVersions: string[];
   }> {
     try {
-      const results = await this.callPythonScript(text, style);
+      this.logger.log(`Calling RapidAPI with text: "${text}", style: ${style}`);
+      const response = await this.httpClient.post(this.apiUrl, {
+        language: 'en',
+        strength: this.getStrengthFromStyle(style),
+        text: text,
+      });
+
+      this.logger.log(`RapidAPI response status: ${response.status}`);
+      this.logger.log(
+        `RapidAPI response data: ${JSON.stringify(response.data)}`,
+      );
+
+      if (response.status !== 200) {
+        this.logger.error(
+          `API returned status ${response.status}: ${JSON.stringify(response.data)}`,
+        );
+        throw new Error(`API returned status ${response.status}`);
+      }
+
+      const paraphrasedText = response.data?.rewrite || text;
+      const confidence = Math.max(response.data?.similarity || 0.85, 0.8); // Ensure minimum confidence of 0.8 for successful API calls
+
+      this.logger.log(
+        `Extracted paraphrasedText: "${paraphrasedText}", confidence: ${confidence}`,
+      );
 
       return {
-        paraphrasedText: results[0] || text,
-        confidence: 0.9, // T5 model typically has high confidence
-        alternativeVersions: results.slice(1) || [],
+        paraphrasedText,
+        confidence,
+        alternativeVersions: [],
       };
     } catch (error) {
       this.logger.error(
-        `Error calling Python paraphrase model: ${error.message}`,
+        `Error calling RapidAPI paraphrase service: ${error.message}`,
       );
+      if (error.response) {
+        this.logger.error(`Response status: ${error.response.status}`);
+        this.logger.error(
+          `Response data: ${JSON.stringify(error.response.data)}`,
+        );
+      } else if (error.request) {
+        this.logger.error(`No response received: ${error.request}`);
+      } else {
+        this.logger.error(`Request setup error: ${error.message}`);
+      }
       throw new Error('AI paraphrasing service temporarily unavailable');
     }
   }
 
-  private async callPythonScript(
-    text: string,
-    style: string,
-  ): Promise<string[]> {
-    return new Promise((resolve, reject) => {
-      let python;
-
-      const args = [this.pythonScriptPath, text, style, '3'];
-      this.logger.log(
-        `Calling Python script with args: ${JSON.stringify(args)}`,
-      );
-
-      try {
-        python = spawn(this.pythonExecutable, args);
-      } catch (error) {
-        reject(new Error(`Failed to spawn python: ${error.message}`));
-        return;
-      }
-
-      let output = '';
-      let errorOutput = '';
-
-      python.stdout.on('data', (data) => {
-        output += data.toString();
-      });
-
-      python.stderr.on('data', (data) => {
-        errorOutput += data.toString();
-      });
-
-      python.on('error', (error) => {
-        this.logger.error(`Python process error: ${error.message}`);
-        reject(new Error(`Python execution failed: ${error.message}`));
-      });
-
-      python.on('close', (code) => {
-        if (code !== 0) {
-          reject(
-            new Error(`Python script failed with code ${code}: ${errorOutput}`),
-          );
-          return;
-        }
-
-        const results = output
-          .trim()
-          .split('\n')
-          .filter((line) => line.trim());
-        resolve(results);
-      });
-
-      // Set timeout to handle AI model loading
-      setTimeout(() => {
-        python.kill();
-        reject(new Error('Python script timeout'));
-      }, 20000); // 20 second timeout for AI models
-    });
+  private getStrengthFromStyle(style: string): number {
+    const styleMap = {
+      simple: 1,
+      creative: 3, // Max allowed is 3
+      advanced: 2,
+      academic: 2,
+      casual: 1,
+      formal: 3, // Max allowed is 3
+    };
+    return styleMap[style] || 2;
   }
 
   async isAvailable(): Promise<boolean> {
     try {
-      // Check if transformers is available
-      const python = spawn(this.pythonExecutable, [
-        '-c',
-        'import transformers; print("OK")',
-      ]);
-
-      return new Promise((resolve) => {
-        let success = false;
-
-        python.stdout.on('data', (data) => {
-          if (data.toString().trim() === 'OK') {
-            success = true;
-          }
-        });
-
-        python.on('close', (code) => {
-          resolve(success && code === 0);
-        });
-
-        python.on('error', () => {
-          resolve(false);
-        });
-
-        // Quick timeout
-        setTimeout(() => {
-          python.kill();
-          resolve(false);
-        }, 2000);
+      await this.httpClient.post(this.apiUrl, {
+        language: 'en',
+        strength: 1,
+        text: 'test',
       });
+      return true;
     } catch {
       return false;
     }

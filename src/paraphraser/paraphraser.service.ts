@@ -78,27 +78,27 @@ export class ParaphraserService {
     this.logger.log(`Use AI: ${useAI}`);
 
     if (useAI) {
-      // Try Python AI first (T5 model)
+      // Try RapidAPI AI first
       try {
-        this.logger.log('Attempting Python AI paraphrasing...');
-        this.logger.debug(`Python executable path: ${this.aiStrategy}`);
+        this.logger.log('Attempting RapidAPI AI paraphrasing...');
+        this.logger.debug(`AI service: ${this.aiStrategy}`);
         const result = await this.aiStrategy.paraphrase(
           text,
           style,
           targetLanguage,
         );
-        this.logger.debug(`Python AI result: ${JSON.stringify(result)}`);
+        this.logger.debug(`RapidAPI AI result: ${JSON.stringify(result)}`);
         if (result.confidence > 0.5) {
-          this.logger.log('Python AI paraphrasing successful');
+          this.logger.log('RapidAPI AI paraphrasing successful');
           return result;
         } else {
           this.logger.warn(
-            `Python AI confidence too low: ${result.confidence}`,
+            `RapidAPI AI confidence too low: ${result.confidence}`,
           );
         }
       } catch (error) {
-        this.logger.error(`Python AI failed: ${error.message}`);
-        this.logger.debug(`Python AI error stack: ${error.stack}`);
+        this.logger.error(`RapidAPI AI failed: ${error.message}`);
+        this.logger.debug(`RapidAPI AI error stack: ${error.stack}`);
       }
 
       // Skip Cloud AI - go directly to Advanced for faster fallback

@@ -20,9 +20,15 @@ export class GrammarCorrectionService {
     }
 
     // In development, try virtual environment first
-    const venvPython = path.join(process.cwd(), '.venv', 'bin', 'python');
+    const venvPython = path.join(process.cwd(), 'venv', 'bin', 'python');
     if (fs.existsSync(venvPython)) {
       return venvPython;
+    }
+
+    // Also check for .venv (alternative venv folder name)
+    const dotVenvPython = path.join(process.cwd(), '.venv', 'bin', 'python');
+    if (fs.existsSync(dotVenvPython)) {
+      return dotVenvPython;
     }
 
     return 'python3';
